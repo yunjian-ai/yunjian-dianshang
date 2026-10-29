@@ -1,0 +1,22 @@
+name: ci
+on:
+  push:
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 装检查要用的库
+        run: pip install hypothesis jsonschema pyyaml
+      - name: 格式和禁用词检查
+        run: python3 tools/validate.py
+      - name: 配方是不是最新
+        run: python3 tools/pack.py --check
+      - name: 安装脚本实测
+        run: python3 tools/test_install.py
+      - name: 算盘脚本自测（核表、算账、对账、报告、底座）
+        run: python3 members/abacus/tests/run_tests.py
