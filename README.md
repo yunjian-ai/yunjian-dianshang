@@ -46,7 +46,7 @@
 
 ## 安装
 
-1. 在 Grok Bot 里点开算盘的分享链接，把它请进来：（分享卡发布后补）
+1. 在 Grok Bot 里点开算盘的分享链接，把它请进来：https://x.ai/bot/nmYg5TpxttsK0TitIyG8h
 2. 第一次对话时它会问能不能从本仓库装齐技能，说可以，一分钟装好，不装插件、不要密钥。
 
 **手动安装**（能跑 shell 的 Bot；Claude Code 等在 `bash` 前加技能目录，如 `ABACUS_SKILL_DIR=~/.claude/skills bash`）：
