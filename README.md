@@ -5,7 +5,7 @@
 <p align="center"><b>一元复始，万象更新。</b><br>算盘替在抖店卖货的店主把账算透：结算账单、资金账单、订单表串起来，按一件衣服算到真实净利。</p>
 
 <p align="center">
-  <a href="CHANGELOG.md"><img alt="算盘" src="https://img.shields.io/badge/算盘-v0.1.0-a4762b"></a>
+  <a href="CHANGELOG.md"><img alt="算盘" src="https://img.shields.io/badge/算盘-v0.1.1-a4762b"></a>
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-CC%20BY%204.0%20%2B%20MIT-555555"></a>
   <a href="https://github.com/yunjian-ai/yunjian-dianshang/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/yunjian-ai/yunjian-dianshang/actions/workflows/ci.yml/badge.svg"></a>
 </p>
@@ -51,7 +51,7 @@
 
 **手动安装**（能跑 shell 的 Bot；Claude Code 等在 `bash` 前加技能目录，如 `ABACUS_SKILL_DIR=~/.claude/skills bash`）：
 ```bash
-curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/abacus-v0.1.0/members/abacus/dist/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/abacus-v0.1.1/members/abacus/dist/install.sh | bash
 ```
 
 ## 数据和边界
@@ -70,7 +70,7 @@ curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/abacus
 
 **Cloudmere · Wanxiang · E-commerce** — AI staff for Douyin shop owners. **Abacus** joins your settlement statement, fund ledger and order export, then computes true per-order profit: return-shipping deductions, customer-service refunds, creator commissions, samples and small-taxpayer VAT included. Every number traces back to a sub-order; missing costs are listed, never guessed. Read-only in the shop backend; anything that moves money is left to you.
 
-Install (any agent with a shell): `curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/abacus-v0.1.0/members/abacus/dist/install.sh | bash`
+Install (any agent with a shell): `curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/abacus-v0.1.1/members/abacus/dist/install.sh | bash`
 
 ## 许可
 文档和卡片 CC BY 4.0，脚本 MIT。云间Bot Cloudmere · GangGe。
