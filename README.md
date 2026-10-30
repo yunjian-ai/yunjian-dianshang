@@ -5,7 +5,9 @@
 <p align="center"><b>一元复始，万象更新。</b><br>算盘替在抖店卖货的店主把账算透：结算账单、资金账单、订单表串起来，按一件衣服算到真实净利。</p>
 
 <p align="center">
-  <a href="CHANGELOG.md"><img alt="算盘" src="https://img.shields.io/badge/算盘-v0.1.1-a4762b"></a>
+<!-- 总表:小标签 -->
+  <a href="CHANGELOG.md"><img alt="算盘" src="https://img.shields.io/badge/算盘-v0.1.2-a4762b"></a>
+<!-- /总表:小标签 -->
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-CC%20BY%204.0%20%2B%20MIT-555555"></a>
   <a href="https://github.com/yunjian-ai/yunjian-dianshang/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/yunjian-ai/yunjian-dianshang/actions/workflows/ci.yml/badge.svg"></a>
 </p>
@@ -51,7 +53,7 @@
 
 **手动安装**（能跑 shell 的 Bot；Claude Code 等在 `bash` 前加技能目录，如 `ABACUS_SKILL_DIR=~/.claude/skills bash`）：
 ```bash
-curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/abacus-v0.1.1/members/abacus/dist/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/abacus-v0.1.2/members/abacus/dist/install.sh | bash
 ```
 
 ## 数据和边界
@@ -63,14 +65,30 @@ curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/abacus
 - 平台规则只认官方原文，每条带链接和核对日期。
 
 ## 路线图
-- ✅ 算盘 v0.1：抖店三层利润、单款诊断、对账、底座三本账
+| 系列 | 成员 | 职能 | 状态 |
+|---|---|---|---|
+<!-- 总表:路线图 -->
+| 起元 | 青鸟 Bluebird | 提示词 | ✅ v0.1.15，[另一个仓库](https://github.com/yunjian-ai/yunjian) |
+| 起元 | 千机 Gear | Skill | ✅ v0.2.4，[另一个仓库](https://github.com/yunjian-ai/yunjian) |
+| 起元 | 凝露 Dew | 蒸馏 | ✅ v0.1.11，[另一个仓库](https://github.com/yunjian-ai/yunjian) |
+| 起元 | 经纬 Loom | 本体 | ✅ v0.1.8，[另一个仓库](https://github.com/yunjian-ai/yunjian) |
+| 起元 | 试金 Touchstone | 验证 | ✅ v0.1.15，[另一个仓库](https://github.com/yunjian-ai/yunjian) |
+| 起元 | 照骨 Xray | 拆解 | ✅ v0.1.3，[另一个仓库](https://github.com/yunjian-ai/yunjian) |
+| 起元 | 起元操盘 Genesis | 操盘系统 | ✅ v0.1.11，[另一个仓库](https://github.com/yunjian-ai/yunjian) |
+| 万象 | 执笔 Pen | 写稿 | ✅ v0.4.0，[另一个仓库](https://github.com/yunjian-ai/yunjian-zimeiti) |
+| 万象 | 丹青 Paint | 做图 | ✅ v0.5.6，[另一个仓库](https://github.com/yunjian-ai/yunjian-zimeiti) |
+| 万象 | 掠影 Reel | 短视频 | ✅ v0.3.3，[另一个仓库](https://github.com/yunjian-ai/yunjian-zimeiti) |
+| 万象 | 算盘 Abacus | 算账：抖店三层利润、单款诊断、对账、底座三本账 | ✅ v0.1.2 |
+| 起元 | 起元架构 Architecture | 一群 AI 的底座 | ✅ v0.1.1，[另一个仓库](https://github.com/yunjian-ai/yunjian) |
+<!-- /总表:路线图 -->
+
 - 接下来：更多电商成员陆续推出
 
 ## English
 
 **Cloudmere · Wanxiang · E-commerce** — AI staff for Douyin shop owners. **Abacus** joins your settlement statement, fund ledger and order export, then computes true per-order profit: return-shipping deductions, customer-service refunds, creator commissions, samples and small-taxpayer VAT included. Every number traces back to a sub-order; missing costs are listed, never guessed. Read-only in the shop backend; anything that moves money is left to you.
 
-Install (any agent with a shell): `curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/abacus-v0.1.1/members/abacus/dist/install.sh | bash`
+Install (any agent with a shell): `curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/abacus-v0.1.2/members/abacus/dist/install.sh | bash`
 
 ## 许可
 文档和卡片 CC BY 4.0，脚本 MIT。云间Bot Cloudmere · GangGe。

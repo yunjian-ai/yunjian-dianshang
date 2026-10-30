@@ -18,5 +18,7 @@ jobs:
         run: python3 tools/pack.py --check
       - name: 安装脚本实测
         run: python3 tools/test_install.py
+      - name: 协同单子检查自测
+        run: python3 tools/test_danzi.py
       - name: 算盘脚本自测（核表、算账、对账、报告、底座）
         run: python3 members/abacus/tests/run_tests.py
