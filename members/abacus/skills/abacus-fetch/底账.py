@@ -95,11 +95,18 @@ def can_shu(*mulu):
                 out[k.strip()] = v; laiyuan[k.strip()] = bh
     return out, laiyuan
 
+def dianpu_gen():
+    """店铺根目录：有四位共用的 ~/.yunjian/店铺/ 就用它（一家店一个文件夹、一份经营决策库、掌柜从这里汇总），没有就用自己的 <HOME>/店铺/（只装这一位时）。"""
+    g = HOME.parent / "店铺"
+    return g if g.is_dir() else HOME / "店铺"
+
+
 def dianpu(ming=None):
-    """主人的店铺文件夹：~/.yunjian/abacus/店铺/<店名>；只有一家时不用给店名。"""
-    base = HOME / "店铺"
+    """主人的店铺文件夹：店铺根目录/<店名>（给的是路径就照路径）；只有一家时不用给店名。"""
+    base = dianpu_gen()
     if ming:
-        return base / ming
+        m = str(ming)
+        return pathlib.Path(m).expanduser() if ("/" in m or m.startswith("~")) else base / m
     ds = [d for d in base.iterdir() if d.is_dir()] if base.is_dir() else []
     if len(ds) == 1:
         return ds[0]

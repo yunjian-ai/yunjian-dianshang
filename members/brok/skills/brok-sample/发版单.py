@@ -2,7 +2,7 @@
 用法：python3 发版单.py --谈定单 <谈定单.json> --单号 H11 [--厂家 某厂] [--出 <文件>] [--今天 …] [--店铺 …]
 收件信息是隐私：**只写进发版单文件**，屏幕上只说写到哪了（杨先生 10-31：厂家发版＝发样衣）。缺款色码件数地址就不出，退出码 1。"""
 import argparse, datetime as dt, json, pathlib, re, sys
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "brok-base")); import 底子
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "brok-base")); import 底子, 回执
 
 
 def shoujian(s):
@@ -35,6 +35,8 @@ def main(argv=None):
 """
     p = pathlib.Path(a.出) if a.出 else 底子.dianpu(a.店铺) / "发版单" / f"{a.单号}-{jin}.md"
     p.parent.mkdir(parents=True, exist_ok=True); p.write_text(t, encoding="utf-8")
+    if not a.出:
+        回执.ji(底子.dianpu(a.店铺), "brok", zuole={"发版单": 1}, chule=[f"发版单 {a.单号}"], chuchu="经纪·发版单", jintian=jin)
     print(f"发版单已写到 {p}：{d['款号']} {d['颜色']} {d['尺码']} × {d['件数']}，给 {a.厂家}；收件信息只在这份发版单里。\n提醒：厂家 48 小时内发货、单号回填合作单 {a.单号}（合作单走到⑦）。")
 
 

@@ -15,10 +15,16 @@ def jintian():
     return _dt.date.fromisoformat(v[:10]) if v else _dt.date.today()
 
 
+def dianpu_gen():
+    """店铺根目录：有四位共用的 ~/.yunjian/店铺/ 就用它（一家店一个文件夹、一份经营决策库、掌柜从这里汇总），没有就用自己的 <HOME>/店铺/（只装这一位时）。"""
+    g = HOME.parent / "店铺"
+    return g if g.is_dir() else HOME / "店铺"
+
+
 def dianpu(ming=None):
     """店铺文件夹：给了店名就是 店铺/<店名>，给的是路径（带 / 或 ~）照路径；没给就用 店铺/ 下唯一的一家（不止一家要主人说是哪家）。
     Bot 实测 10-31：「--店铺 阿青卫衣」被当成相对路径，卡写进了技能目录。"""
-    d = HOME / "店铺"
+    d = dianpu_gen()
     if ming:
         m = str(ming)
         return pathlib.Path(m).expanduser() if ("/" in m or m.startswith("~")) else d / m

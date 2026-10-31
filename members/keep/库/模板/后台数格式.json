@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "掌柜读后台存下的数（读页面.py 产出；Bot 自己看页面时照这个格式手填）",
+  "type": "object",
+  "required": ["店铺", "记录时间", "实时", "体验分"],
+  "properties": {
+    "店铺": {"type": "string"},
+    "记录时间": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}"},
+    "出处": {"type": "object"},
+    "实时": {
+      "type": "object",
+      "description": "首页「经营数据 · 实时」；每项 {值, 较昨日}，较昨日是带符号的小数（−0.44 表示比昨天少 44%），没有就 null",
+      "additionalProperties": {"type": "object", "required": ["值"], "properties": {"值": {"type": ["number", "null"]}, "较昨日": {"type": ["number", "null"]}}}
+    },
+    "待办": {"type": "object", "additionalProperties": {"type": "integer"}},
+    "联盟": {"type": "object"},
+    "体验分": {
+      "type": "object",
+      "required": ["总分"],
+      "properties": {
+        "总分": {"type": ["number", "null"]},
+        "更新时间": {"type": ["string", "null"]},
+        "今日已更新": {"type": ["boolean", "null"]},
+        "分项": {"type": "object"},
+        "短板": {"type": ["string", "null"]},
+        "保障": {"type": ["string", "null"]}
+      }
+    },
+    "合作消息": {"type": "array", "items": {"type": "object", "required": ["达人", "最后一句"], "properties": {"达人": {"type": "string"}, "最后一句": {"type": "string"}, "时间": {"type": "string"}}}},
+    "没取到": {"type": "array", "items": {"type": "string"}}
+  }
+}

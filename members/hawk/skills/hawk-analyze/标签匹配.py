@@ -20,7 +20,7 @@ def main(argv=None):
     a.add_argument("--男装", action="store_true"); a.add_argument("--女装", action="store_true")   # 女装是默认，写上也认（Bot 自报 3）
     a.add_argument("--店铺"); a.add_argument("--在售款"); a.add_argument("--今天"); a.add_argument("--宽", action="store_true")
     a = a.parse_args(argv)
-    dp = pathlib.Path(a.店铺) if a.店铺 else 底子.dianpu()
+    dp = 底子.dianpu(a.店铺)
     cs, _ = 底子.canshu(dp)
     jin = 爆品线.rq(a.今天) if a.今天 else 爆品线.dt.date.today()
     rows = list(csv.DictReader(open(dp / "观察表.csv", encoding="utf-8-sig")))

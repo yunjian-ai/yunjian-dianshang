@@ -24,7 +24,7 @@ def main(argv=None):
     a = argparse.ArgumentParser(); a.add_argument("--起", required=True); a.add_argument("--止", required=True)
     a.add_argument("--店铺"); a.add_argument("--模拟", default="")
     a = a.parse_args(argv)
-    dp = pathlib.Path(a.店铺) if a.店铺 else 底账.dianpu()
+    dp = 底账.dianpu(a.店铺)
     out = dp / "报告" / f"{a.起}至{a.止}"
     hz = json.loads((out / "汇总.json").read_text(encoding="utf-8"))
     rows = list(csv.DictReader(open(out / "逐单账.csv", encoding="utf-8-sig")))

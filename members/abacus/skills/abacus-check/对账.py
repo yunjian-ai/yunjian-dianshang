@@ -18,7 +18,7 @@ f = lambda x: float(x or 0)
 def main(argv=None):
     a = argparse.ArgumentParser(); a.add_argument("--起", required=True); a.add_argument("--止", required=True); a.add_argument("--店铺")
     a = a.parse_args(argv)
-    dp = pathlib.Path(a.店铺) if a.店铺 else 底账.dianpu()
+    dp = 底账.dianpu(a.店铺)
     zai = lambda t: a.起 <= (t or "")[:10] <= a.止
     lan, ti = [], []
     js, zj = [], []

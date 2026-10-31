@@ -11,7 +11,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); import 读榜
 def main(argv=None):
     a = argparse.ArgumentParser(); a.add_argument("快照"); a.add_argument("--店铺")
     a = a.parse_args(argv)
-    dp = pathlib.Path(a.店铺) if a.店铺 else 底子.dianpu()
+    dp = 底子.dianpu(a.店铺)
     out = []
     for r in csv.DictReader(open(a.快照, encoding="utf-8-sig")):
         pt = r.get("平台", "")

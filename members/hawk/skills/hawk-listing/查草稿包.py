@@ -72,7 +72,7 @@ def main(argv=None):
     a = argparse.ArgumentParser(); a.add_argument("草稿包"); a.add_argument("--店铺"); a.add_argument("--联盟")
     a = a.parse_args(argv)
     c = json.loads(pathlib.Path(a.草稿包).read_text(encoding="utf-8"))
-    dp = pathlib.Path(a.店铺) if a.店铺 else None
+    dp = 底子.dianpu(a.店铺) if a.店铺 else None
     cs, _ = 底子.canshu(dp)
     cuo = cha(c, cs)
     if a.联盟:

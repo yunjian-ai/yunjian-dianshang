@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "云间员工回执（算盘、货郎、经纪每次干完活记一笔，掌柜读）",
+  "type": "object",
+  "required": ["成员", "店铺", "日期", "做了", "出了", "卡在", "等主人定", "数"],
+  "properties": {
+    "成员": {"enum": ["abacus", "hawk", "brok", "keep"]},
+    "店铺": {"type": "string", "minLength": 1},
+    "日期": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+    "记录时间": {"type": "string"},
+    "做了": {"type": "object", "additionalProperties": {"type": "number", "minimum": 0}},
+    "出了": {"type": "array", "items": {"type": "string"}},
+    "卡在": {"type": "array", "items": {"type": "string"}},
+    "等主人定": {"type": "array", "items": {"type": "string"}},
+    "数": {"type": "object"},
+    "出处": {"type": "array", "items": {"type": "string"}}
+  }
+}

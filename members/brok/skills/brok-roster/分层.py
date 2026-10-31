@@ -3,7 +3,7 @@
 核心：近 60 天至少 2 张合作单出单，或利润排店里达人前 20%（要算盘回执；没装算盘这一条不算、写明）；沉睡：30 天没动静，或跟满次数还没回；成长：出过单；新：其余。
 平台「我的达人库」的「流失风险达人（距上次出单超过 30 天）」就是沉睡（R-LM-006），对不上以平台为准。"""
 import argparse, datetime as dt, json, pathlib, sys
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "brok-base")); import 底子
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "brok-base")); import 底子, 回执
 
 D = lambda s: dt.date.fromisoformat(s[:10])
 
@@ -52,6 +52,10 @@ def main(argv=None):
         print(json.dumps(out, ensure_ascii=False, indent=1)); return
     n = {c: sum(1 for v in out.values() if v["层"] == c) for c in ("核心", "成长", "新", "沉睡")}
     print(f"{len(out)} 位达人：核心 {n['核心']}、成长 {n['成长']}、新 {n['新']}、沉睡 {n['沉睡']}" + ("" if lr else "（没给算盘利润回执（--利润），「利润前 20%」这条没算）") + ("；阈值按默认值" if "核心_近天数" in mo else ""))
+    try:
+        回执.ji(底子.dianpu(a.店铺), "brok", shu={"分层": n}, chuchu="经纪·分层")
+    except SystemExit:
+        pass
     xu = {"核心": 0, "成长": 1, "新": 2, "沉睡": 3}
     hang = [[k, v["层"], v["最后动静"], v["理由"]] for k, v in sorted(out.items(), key=lambda x: (xu[x[1]["层"]], x[0]))]
     print(底子.biao(["达人", "层", "最后动静", "理由"], hang, kuan=a.宽, zhu=None if a.宽 else 3, jian=0))

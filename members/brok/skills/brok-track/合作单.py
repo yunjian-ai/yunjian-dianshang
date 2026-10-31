@@ -3,7 +3,7 @@
 卡点（杨先生 10-31 认框架图，数从默认值／经营决策库读）：申样剩余 ≤24 小时（平台 72 小时自动取消）；②第一句没回 30 天进沉睡、60 天后可再邀约一次（平台 60 天内不许重发，实测 10-31）；
 ④转人工当场提醒主人加微信；⑧签收 7 天没动静跟进、45 天交付期剩 7 天内提醒；⑨上播 3 天出单少于 5 单复盘。"""
 import argparse, csv, datetime as dt, json, pathlib, sys
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "brok-base")); import 底子
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "brok-base")); import 底子, 回执
 
 D = lambda s: dt.date.fromisoformat(s[:10])
 
@@ -68,6 +68,13 @@ def daiban(hds, jin, cs, sy=(), xi=()):
     return sorted(xs)
 
 
+def _dp_or_none(ming):
+    try:
+        return 底子.dianpu(ming)
+    except SystemExit:
+        return None
+
+
 def main(argv=None):
     a = argparse.ArgumentParser(); a.add_argument("--合作单", required=True); a.add_argument("--申样"); a.add_argument("--消息"); a.add_argument("--今天")
     a.add_argument("--店铺"); a.add_argument("--宽", action="store_true"); a.add_argument("--json", action="store_true")
@@ -80,6 +87,12 @@ def main(argv=None):
             sy = list(csv.DictReader(f))
     xi = json.loads(pathlib.Path(a.消息).read_text(encoding="utf-8")) if a.消息 else []
     xs = daiban(json.loads(pathlib.Path(a.合作单).read_text(encoding="utf-8")), jin, cs, sy, xi)
+    zhu = {"转人工", "谈佣金", "申样对不上", "夹带指令", "复盘"}
+    回执.ji(_dp_or_none(a.店铺), "brok", zuole={"排今日待办": 1},
+           kazai=[f"{x[2]} {x[3]}" for x in xs if x[3] in ("签收没动静", "交付期快到", "申样快到时限")],
+           deng=[f"{x[2]} {x[3]}" for x in xs if x[3] in zhu],
+           shu={"今日待办": [dict(zip(["急", "单号", "达人", "事", "说明"], x)) for x in xs], "新消息": sum(1 for x in xs if x[1][:1].isdigit() and ":" in x[1])},
+           chuchu="经纪·合作单＋合作消息", jintian=jin)
     if a.json:
         print(json.dumps([dict(zip(["急", "单号", "达人", "事", "说明"], x)) for x in xs], ensure_ascii=False, indent=1)); return
     print(f"{jin} 今天要办 {len(xs)} 件" + (f"，最急的是 {xs[0][1]}（{xs[0][3]}）" if xs else "") + ("；时限按默认值" if "签收没动静_天" in mo else "") + "：")

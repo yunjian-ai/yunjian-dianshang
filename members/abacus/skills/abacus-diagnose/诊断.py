@@ -22,7 +22,7 @@ def main(argv=None):
     a = argparse.ArgumentParser(); a.add_argument("款"); a.add_argument("--店铺"); a.add_argument("--佣金", type=float)
     a.add_argument("--退货率", type=float); a.add_argument("--退货运费", type=float)
     a = a.parse_args(argv)
-    dp = pathlib.Path(a.店铺) if a.店铺 else 底账.dianpu()
+    dp = 底账.dianpu(a.店铺)
     js, zj, dd = [], [], []
     for p in sorted((dp / "账单").glob("*.csv")):
         ming, _, shu = 底账.du_biao(p)

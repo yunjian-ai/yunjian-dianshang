@@ -5,7 +5,7 @@
 能发退出码 0（--记一条 会把这条写进发送记录）；不能发退出码 1。线从默认值／经营决策库读（每天发第一句上限、两条最少间隔_分钟、没回最多再跟_次、建联额度提醒比例）。
 来由：规则 101665 第 5.23 条不许 IM 大量频繁发；6.2.5 第 4 项程序干预可终止合作（杨先生 10-31：照人的节奏、限量）。"""
 import argparse, csv, datetime as dt, json, pathlib, sys
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "brok-base")); import 底子
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "brok-base")); import 底子, 回执
 
 FMT = "%Y-%m-%d %H:%M"
 
@@ -67,6 +67,10 @@ def main(argv=None):
                 w.writerow(["时间", "达人编号", "类型", "模板"])
             w.writerow([now.strftime(FMT), a.达人, a.类型, a.模板])
         print("已记进发送记录")
+        try:
+            回执.ji(底子.dianpu(a.店铺), "brok", zuole={a.类型 or "消息": 1}, chuchu="经纪·发送记录", jintian=now.date())
+        except SystemExit:
+            pass
 
 
 if __name__ == "__main__":

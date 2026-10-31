@@ -3,7 +3,7 @@
 规矩：利润只照算盘回执写（没装算盘就写「没装算盘」＋料单，不心算）；结论以「建议」开头、拍板留给主人；
 没过爆品线的不能写「建议做」（主人仍可拍板做）；自己设计的款写「建议做」要带参照款；五看每栏都要写出处（平台·页面·店铺·时间，杨先生 10-31）；输出是表格；格式照 选品卡.schema.json（有 jsonschema 就用它查，没有就查必填栏）。不过就退出码 1。"""
 import argparse, json, pathlib, sys
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "hawk-base")); import 底子
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "hawk-base")); import 底子, 回执
 
 SC = json.loads((pathlib.Path(__file__).resolve().parent / "选品卡.schema.json").read_text(encoding="utf-8"))
 
@@ -70,10 +70,11 @@ def main(argv=None):
         print("选品卡不过：\n" + "\n".join("- " + c for c in cuo)); raise SystemExit(1)
     t = md(k); print(t)
     if not a.演练:
-        dp = pathlib.Path(a.店铺) if a.店铺 else 底子.dianpu()
+        dp = 底子.dianpu(a.店铺)
         (dp / "选品卡").mkdir(parents=True, exist_ok=True)
         (dp / "选品卡" / f"{k['款号']}.md").write_text(t, encoding="utf-8")
         print("选品卡 OK，已存")
+        回执.ji(dp, "hawk", zuole={"选品卡": 1}, chule=[f"选品卡 {k['款号']}"], deng=[f"选品卡 {k['款号']} 等您拍板"], chuchu="货郎·选品卡")
 
 
 if __name__ == "__main__":

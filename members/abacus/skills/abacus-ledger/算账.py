@@ -6,7 +6,7 @@
 口径（三层）：毛利＝收入−成本；到手＝毛利−平台服务费−佣金分成−发货运费；净利＝到手−退货运费−补偿−店铺层面费用−税
 """
 import argparse, collections, csv, datetime as dt, json, pathlib, sys
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "abacus-fetch")); import 底账
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "abacus-fetch")); import 底账, 回执
 
 MOREN = {"快递单价": 3.0, "退回损耗比例": 0.0, "寄样单列": "是", "增值税征收率": 0.01, "免征_月销售额上限": 100000.0,
          "附加税费_合计率_减半后": 0.06, "纳税人类型": "小规模"}
@@ -26,7 +26,7 @@ def he_bing(dp, ming, key):
 def main(argv=None):
     a = argparse.ArgumentParser(); a.add_argument("--起", required=True); a.add_argument("--止", required=True); a.add_argument("--店铺")
     a = a.parse_args(argv)
-    dp = pathlib.Path(a.店铺) if a.店铺 else 底账.dianpu()
+    dp = 底账.dianpu(a.店铺)
     js_all = he_bing(dp, "结算账单", lambda r: (r["子订单号"], r["结算单类型"], r["结算时间"]))
     zj_all = he_bing(dp, "资金账单", lambda r: r.get("动帐流水号") or (r["动账时间"], r["子订单号"], r["动账金额"]))
     dd = {r["子订单编号"]: r for r in he_bing(dp, "订单表", lambda r: r["子订单编号"])}
@@ -178,6 +178,8 @@ def main(argv=None):
           f"用了默认值：{'、'.join(hz['用了默认值']) or '无'}"]
     (out / "算账报告.md").write_text("\n".join(md) + "\n", encoding="utf-8")
     print("\n".join(md)); print("出到", out)
+    回执.ji(dp, "abacus", zuole={"算账": 1}, kazai=[f"缺成本 {len(que)} 款"] if que else [],
+           shu={"账": {"起": a.起, "止": a.止, **t}}, chuchu=f"算盘·算账·{a.起}～{a.止}")
 
 if __name__ == "__main__":
     main()

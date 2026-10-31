@@ -15,7 +15,7 @@ def main(argv=None):
     a.add_argument("--状态", default="生效", choices=["生效", "待确认"]); a.add_argument("--替代"); a.add_argument("--影响", default="")
     a.add_argument("--今天"); a.add_argument("--店铺"); a.add_argument("--演练", action="store_true")
     a = a.parse_args(argv)
-    dp = pathlib.Path(a.店铺) if a.店铺 else 底子.dianpu()
+    dp = 底子.dianpu(a.店铺)
     jc = dp / "经营决策库"
     jin = a.今天 or str(dt.date.today())
     ka = {p: 底子.kaitou(p) for p in sorted(jc.glob("D-*.md")) if not p.name.startswith("._")} if jc.exists() else {}

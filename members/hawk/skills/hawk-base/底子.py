@@ -6,11 +6,18 @@ HOME = pathlib.Path(os.environ.get("HAWK_HOME", pathlib.Path.home() / ".yunjian"
 KU = HOME / "库"
 
 
+def dianpu_gen():
+    """店铺根目录：有四位共用的 ~/.yunjian/店铺/ 就用它（一家店一个文件夹、一份经营决策库、掌柜从这里汇总），没有就用自己的 <HOME>/店铺/（只装这一位时）。"""
+    g = HOME.parent / "店铺"
+    return g if g.is_dir() else HOME / "店铺"
+
+
 def dianpu(ming=None):
-    """店铺文件夹：给了店名用店名；没给就用 店铺/ 下唯一的一家（不止一家要主人说是哪家）。"""
-    d = HOME / "店铺"
+    """店铺文件夹：给了店名就是 店铺/<店名>，给的是路径（带 / 或 ~）照路径；没给就用 店铺/ 下唯一的一家（不止一家要主人说是哪家）。"""
+    d = dianpu_gen()
     if ming:
-        return d / ming
+        m = str(ming)
+        return pathlib.Path(m).expanduser() if ("/" in m or m.startswith("~")) else d / m
     xs = [p for p in d.iterdir() if p.is_dir()] if d.exists() else []
     if len(xs) != 1:
         raise SystemExit(f"不知道是哪家店：{d} 下有 {len(xs)} 家，用 --店铺 指定")
@@ -44,7 +51,12 @@ def canshu(dp=None, ku=None):
     """参数：服装店默认值，再用店铺经营决策库里「状态: 生效」的卡盖掉同名参数。返回（参数, 用了默认值的名字）。"""
     cs = moren_canshu(ku)
     gai = set()
-    jc = pathlib.Path(dp) / "经营决策库" if dp else None
+    if not dp:   # 没指定店铺：只有一家就用它，免得主人定的规矩被默认值盖住（经纪 Bot 实测 10-31 同类）
+        try:
+            dp = dianpu()
+        except SystemExit:
+            dp = None
+    jc = dianpu(dp) / "经营决策库" if dp else None
     if jc and jc.exists():
         for p in sorted(jc.glob("D-*.md")):
             if p.name.startswith("._"):   # Mac 打包带的隐藏文件（Bot 实测自报 14）

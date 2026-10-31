@@ -10,7 +10,7 @@ sys.path.insert(0, str(HERE.parent / "hawk-listing")); import 查草稿包, 查�
 def main(argv=None):
     a = argparse.ArgumentParser(); a.add_argument("--图"); a.add_argument("--标题"); a.add_argument("--成分"); a.add_argument("--店铺")
     a = a.parse_args(argv)
-    cs, _ = 底子.canshu(pathlib.Path(a.店铺) if a.店铺 else None)
+    cs, _ = 底子.canshu(a.店铺)
     cuo = []
     if a.图:
         zt = json.loads(pathlib.Path(a.图).read_text(encoding="utf-8")).get("主图", [])

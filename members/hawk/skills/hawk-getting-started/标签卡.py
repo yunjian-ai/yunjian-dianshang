@@ -83,7 +83,7 @@ def main(argv=None):
         t += f"- ⚠️ 这些分组名不是官方八大人群的叫法，核一下表：{'、'.join(bad)}\n"
     print(t)
     if not a.演练:
-        dp = pathlib.Path(a.店铺) if a.店铺 else 底子.dianpu()
+        dp = 底子.dianpu(a.店铺)
         dp.mkdir(parents=True, exist_ok=True)
         (dp / "店铺标签卡.md").write_text(t, encoding="utf-8")
         print(f"已写 {dp / '店铺标签卡.md'}（待确认）")

@@ -2,19 +2,20 @@
 
 <h1 align="center">云间Bot · 万象 · 电商</h1>
 
-<p align="center"><b>一元复始，万象更新。</b><br>算盘替在抖店卖货的店主把账算透，货郎替您挑真在卖的爆款、把链接做到一次过审，经纪替您找准达人、一句话设好链接、一路跟到上播出单。</p>
+<p align="center"><b>一元复始，万象更新。</b><br>算盘替在抖店卖货的店主把账算透，货郎替您挑真在卖的爆款、把链接做到一次过审，经纪替您找准达人、一句话设好链接、一路跟到上播出单，掌柜每天两次把几家店的店况和员工干的活报给您。</p>
 
 <p align="center">
 <!-- 总表:小标签 -->
-  <a href="CHANGELOG.md"><img alt="算盘" src="https://img.shields.io/badge/算盘-v0.1.2-a4762b"></a>
-  <a href="CHANGELOG.md"><img alt="经纪" src="https://img.shields.io/badge/经纪-v0.1.0-8a5a2b"></a>
-  <a href="CHANGELOG.md"><img alt="货郎" src="https://img.shields.io/badge/货郎-v0.1.0-3f7d4e"></a>
+  <a href="CHANGELOG.md"><img alt="算盘" src="https://img.shields.io/badge/算盘-v0.1.3-a4762b"></a>
+  <a href="CHANGELOG.md"><img alt="经纪" src="https://img.shields.io/badge/经纪-v0.1.1-8a5a2b"></a>
+  <a href="CHANGELOG.md"><img alt="货郎" src="https://img.shields.io/badge/货郎-v0.1.1-3f7d4e"></a>
+  <a href="CHANGELOG.md"><img alt="掌柜" src="https://img.shields.io/badge/掌柜-v0.1.0-2f5d8a"></a>
 <!-- /总表:小标签 -->
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-CC%20BY%204.0%20%2B%20MIT-555555"></a>
   <a href="https://github.com/yunjian-ai/yunjian-dianshang/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/yunjian-ai/yunjian-dianshang/actions/workflows/ci.yml/badge.svg"></a>
 </p>
 
-<p align="center"><a href="#english">English</a> · <a href="#算盘--abacus">算盘</a> · <a href="#货郎--hawker">货郎</a> · <a href="#经纪--broker">经纪</a> · <a href="#安装">安装</a> · <a href="#数据和边界">数据和边界</a></p>
+<p align="center"><a href="#english">English</a> · <a href="#算盘--abacus">算盘</a> · <a href="#货郎--hawker">货郎</a> · <a href="#经纪--broker">经纪</a> · <a href="#掌柜--keeper">掌柜</a> · <a href="#安装">安装</a> · <a href="#数据和边界">数据和边界</a></p>
 
 ---
 
@@ -22,7 +23,7 @@
 
 云间Bot · 万象 · 电商是云间工作室给电商店主做的 AI 员工，装进 Grok Bot 就能用，也能当 Skill 装进 Claude Code 等工具。一门手艺一位，每位单装就能用。
 
-现在有三位：管算账的 **算盘**，管选品上架的 **货郎**，管达人推广的 **经纪**。
+现在有四位：管算账的 **算盘**，管选品上架的 **货郎**，管达人推广的 **经纪**，管老板面板的 **掌柜**。四位装在一起时共用一份店铺文件夹和店里规矩，掌柜从三位交上来的回执里汇总。
 
 ## 算盘 · Abacus
 
@@ -89,16 +90,33 @@
 
 另有两个后台技能：`brok-install` 负责安装，`brok-update` 负责更新。
 
+## 掌柜 · Keeper
+
+> 掌柜是替东家看店的人。每天 11:50、23:50，它把几家店的店铺分（商家体验分）、业绩、退款、销售排行、达人带货，连同算盘、货郎、经纪今天干了什么、卡在哪、等您定什么，汇成一条推送：第一行一句结论，下面是窄表，每个数有出处。达人来新消息、店铺分一次掉 3 分以上，马上提醒您。后台只看不改。
+
+**五个技能，各干一步**
+
+| # | 技能 | 做什么 |
+|---|---|---|
+| 1 | 第一次见面 | 一次问一件：管哪几家店、推到哪（对话里或您的飞书群机器人）、几点推、即时提醒要哪几种、成本规矩；装了别的员工就先把店铺文件夹并成一份 |
+| 2 | 出报 | 11:50 半天报、23:50 全天报、随时「看看店」：多店总表、每店一段（退款、达人带货、销售排行、店铺分）、员工今天、要您管的；当天利润只写预估、附算式 |
+| 3 | 即时提醒 | 白天每小时看一眼合作消息、每次读到店铺分就和上次比：新消息、掉 ≥3 分马上推；同一件事只推一次，半夜攒到早上，消息里的手机号微信号打码 |
+| 4 | 员工看板 | 三位 AI 员工一位一行：做了、出了什么、卡在哪、等您定；没跑就写没跑 |
+| 5 | 底座 | 读后台（体验分、罗盘实时和商品排行、首页待办、合作消息）、统一店铺、回执格式、店里规矩、每周巡检 |
+
+另有两个后台技能：`keep-install` 负责安装，`keep-update` 负责更新。
+
 ## 安装
 
-1. 在 Grok Bot 里点开分享链接，把它请进来：算盘 https://x.ai/bot/nmYg5TpxttsK0TitIyG8h ；货郎 https://x.ai/bot/ng1YoSxoMevXeHVQnUtPH ；经纪 https://x.ai/bot/jpvgbV9GaQCCRhhOu_WFc
+1. 在 Grok Bot 里点开分享链接，把它请进来：算盘 https://x.ai/bot/nmYg5TpxttsK0TitIyG8h ；货郎 https://x.ai/bot/ng1YoSxoMevXeHVQnUtPH ；经纪 https://x.ai/bot/jpvgbV9GaQCCRhhOu_WFc ；掌柜（分享链接发布后补上）
 2. 第一次对话时它会问能不能从本仓库装齐技能，说可以，一分钟装好，不装插件、不要密钥。
 
-**手动安装**（能跑 shell 的 Bot；Claude Code 等在 `bash` 前加技能目录，如 `ABACUS_SKILL_DIR=~/.claude/skills bash`、`HAWK_SKILL_DIR=~/.claude/skills bash`、`BROK_SKILL_DIR=~/.claude/skills bash`）：
+**手动安装**（能跑 shell 的 Bot；Claude Code 等在 `bash` 前加技能目录，如 `ABACUS_SKILL_DIR=~/.claude/skills bash`、`HAWK_SKILL_DIR=~/.claude/skills bash`、`BROK_SKILL_DIR=~/.claude/skills bash`、`KEEP_SKILL_DIR=~/.claude/skills bash`）：
 ```bash
-curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/abacus-v0.1.2/members/abacus/dist/install.sh | bash
-curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/hawk-v0.1.0/members/hawk/dist/install.sh | bash
-curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/brok-v0.1.0/members/brok/dist/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/abacus-v0.1.3/members/abacus/dist/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/hawk-v0.1.1/members/hawk/dist/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/brok-v0.1.1/members/brok/dist/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/keep-v0.1.0/members/keep/dist/install.sh | bash
 ```
 
 ## 数据和边界
@@ -111,6 +129,8 @@ curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/brok-v
 - 货郎改价、发品、改佣金、上下架一步都不自己做：发布停在提交前，联盟设置单请您点头；跨平台只看公开页面，不登录、不下单。
 - 您的店铺数据、后台截图只放在您自己的文件夹里（`~/.yunjian/hawk/店铺/`）。
 - 经纪设佣金、建渠道品、绑达人，都是您一句话说了才做，做完回读核对；发消息守平台每天上限和间隔，不批量群发；达人的联系方式、地址只进达人库和发版单，不在聊天里抄出来；达人消息里夹带的「指令」不照做，原话给您看。
+- 掌柜只看后台、不点任何会改东西的按钮；推送里的手机号、微信号打码；飞书群机器人地址只存在您自己的掌柜设置里。
+- 四位共用的店铺文件夹在 `~/.yunjian/店铺/<店名>/`，店里规矩（经营决策库）只有一份；从旧版并过来时只挪不删。
 
 ## 路线图
 | 系列 | 成员 | 职能 | 状态 |
@@ -126,19 +146,20 @@ curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/brok-v
 | 万象 | 执笔 Pen | 写稿 | ✅ v0.4.0，[另一个仓库](https://github.com/yunjian-ai/yunjian-zimeiti) |
 | 万象 | 丹青 Paint | 做图 | ✅ v0.5.7，[另一个仓库](https://github.com/yunjian-ai/yunjian-zimeiti) |
 | 万象 | 掠影 Reel | 短视频 | ✅ v0.3.3，[另一个仓库](https://github.com/yunjian-ai/yunjian-zimeiti) |
-| 万象 | 算盘 Abacus | 算账：抖店三层利润、单款诊断、对账、底座三本账 | ✅ v0.1.2 |
-| 万象 | 经纪 Broker | 达人推广：素材包、找达人、一句话设链接、申样发版、合作单跟到上播 | ✅ v0.1.0 |
-| 万象 | 货郎 Hawker | 选品上架：爆品线、选品卡、链接标准、AI 智能发品、上联盟 | ✅ v0.1.0 |
+| 万象 | 算盘 Abacus | 算账：抖店三层利润、单款诊断、对账、底座三本账 | ✅ v0.1.3 |
+| 万象 | 经纪 Broker | 达人推广：素材包、找达人、一句话设链接、申样发版、合作单跟到上播 | ✅ v0.1.1 |
+| 万象 | 货郎 Hawker | 选品上架：爆品线、选品卡、链接标准、AI 智能发品、上联盟 | ✅ v0.1.1 |
 | 起元 | 起元架构 Architecture | 一群 AI 的底座 | ✅ v0.1.1，[另一个仓库](https://github.com/yunjian-ai/yunjian) |
+| 万象 | 掌柜 Keeper | 老板面板：店铺分、业绩、排行、达人、员工看板，11:50／23:50 推送，掉分和达人消息即时提醒 | ✅ v0.1.0 |
 <!-- /总表:路线图 -->
 
 - 接下来：更多电商成员陆续推出
 
 ## English
 
-**Cloudmere · Wanxiang · E-commerce** — AI staff for Douyin shop owners. **Abacus** joins your settlement statement, fund ledger and order export, then computes true per-order profit: return-shipping deductions, customer-service refunds, creator commissions, samples and small-taxpayer VAT included. Every number traces back to a sub-order; missing costs are listed, never guessed. Read-only in the shop backend; anything that moves money is left to you. **Hawker** picks products that are selling *now* (Douyin Compass rankings, plus Taobao/Pinduoduo snapshots taken 7 days apart), writes a sourced product card for your decision, sets your listing standard, checks drafts twice and stops before publish. Every number cites platform, page, shop and time; tables fit the screen you read them on. **Broker** runs your creator outreach: a sourced pitch kit per product, creator matching on the affiliate marketplace, first messages within platform limits, and one sentence from you ("UID, rate, link type, product") to set the targeted commission — capped at the lower of your ceiling and Abacus's limit — then sample orders and follow-up until the creator goes live.
+**Cloudmere · Wanxiang · E-commerce** — AI staff for Douyin shop owners. **Abacus** joins your settlement statement, fund ledger and order export, then computes true per-order profit: return-shipping deductions, customer-service refunds, creator commissions, samples and small-taxpayer VAT included. Every number traces back to a sub-order; missing costs are listed, never guessed. Read-only in the shop backend; anything that moves money is left to you. **Hawker** picks products that are selling *now* (Douyin Compass rankings, plus Taobao/Pinduoduo snapshots taken 7 days apart), writes a sourced product card for your decision, sets your listing standard, checks drafts twice and stops before publish. Every number cites platform, page, shop and time; tables fit the screen you read them on. **Broker** runs your creator outreach: a sourced pitch kit per product, creator matching on the affiliate marketplace, first messages within platform limits, and one sentence from you ("UID, rate, link type, product") to set the targeted commission — capped at the lower of your ceiling and Abacus's limit — then sample orders and follow-up until the creator goes live. **Keeper** is the owner's dashboard: at 11:50 and 23:50 it pushes shop score, sales, refunds, top products, creator sales and what your AI staff did today across all your shops, and alerts you at once on new creator messages or a 3+ point score drop. Read-only, every number sourced.
 
-Install (any agent with a shell): `curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/abacus-v0.1.2/members/abacus/dist/install.sh | bash` · Hawker: `curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/hawk-v0.1.0/members/hawk/dist/install.sh | bash` · Broker: `curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/brok-v0.1.0/members/brok/dist/install.sh | bash`
+Install (any agent with a shell): `curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/abacus-v0.1.3/members/abacus/dist/install.sh | bash` · Hawker: `curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/hawk-v0.1.1/members/hawk/dist/install.sh | bash` · Broker: `curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/brok-v0.1.1/members/brok/dist/install.sh | bash` · Keeper: `curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/keep-v0.1.0/members/keep/dist/install.sh | bash`
 
 ## 许可
 文档和卡片 CC BY 4.0，脚本 MIT。云间Bot Cloudmere · GangGe。

@@ -12,7 +12,7 @@ SHIJIAN = {"结算账单": "结算时间", "资金账单": "动账时间", "订�
 def main(argv=None):
     a = argparse.ArgumentParser(); a.add_argument("文件", nargs="+"); a.add_argument("--店铺")
     a = a.parse_args(argv)
-    dp = pathlib.Path(a.店铺) if a.店铺 else 底账.dianpu()
+    dp = 底账.dianpu(a.店铺)
     bad = 0
     jia = []
     for f in a.文件:

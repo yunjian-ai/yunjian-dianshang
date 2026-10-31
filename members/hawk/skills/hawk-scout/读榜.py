@@ -24,7 +24,7 @@ def main(argv=None):
     a = argparse.ArgumentParser(); a.add_argument("榜单"); a.add_argument("--时间段", default="近1天")
     a.add_argument("--记录时间", required=True); a.add_argument("--店铺")
     a = a.parse_args(argv)
-    dp = pathlib.Path(a.店铺) if a.店铺 else 底子.dianpu()
+    dp = 底子.dianpu(a.店铺)
     out, ke = [], []
     for r in csv.DictReader(open(a.榜单, encoding="utf-8-sig")):
         if not (r.get("成交件数") or "").strip() or (r.get("商品") or "").strip() in ("", "商品"):

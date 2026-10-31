@@ -26,3 +26,5 @@ jobs:
         run: python3 members/hawk/tests/run_tests.py
       - name: 经纪脚本自测（匹配分、话术、节流、一句话、佣金闸、申样、合作单、分层）
         run: python3 members/brok/tests/run_tests.py
+      - name: 掌柜脚本自测（读页面、汇总、出报、即时提醒、推送、员工看板、统一店铺）
+        run: python3 members/keep/tests/run_tests.py
