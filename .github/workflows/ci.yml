@@ -24,3 +24,5 @@ jobs:
         run: python3 members/abacus/tests/run_tests.py
       - name: 货郎脚本自测（爆品线、选品卡、草稿包、佣金闸、货盘）
         run: python3 members/hawk/tests/run_tests.py
+      - name: 经纪脚本自测（匹配分、话术、节流、一句话、佣金闸、申样、合作单、分层）
+        run: python3 members/brok/tests/run_tests.py

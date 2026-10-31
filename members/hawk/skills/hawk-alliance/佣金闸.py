@@ -1,15 +1,23 @@
 """货郎 · 佣金闸：要设的佣金（或联盟自动推广的默认佣金）↔ 算盘给的佣金上限 → 超了就拦
-用法：python3 佣金闸.py --佣金 0.20 --回执 <算盘回执.json> [--自动推广 已开启 --默认佣金 0.20]
+用法：python3 佣金闸.py --佣金 0.20 --回执 <算盘回执.json> [--自动推广 已开启 --默认佣金 0.20] [--店铺 <店铺文件夹>]
+上限取「主人定的封顶」（经营决策库 佣金封顶_主人定）和算盘上限里低的那个（杨先生 10-31）。
 官方普通计划佣金 1%～50%；超上限退出码 1（只拦、不改，改佣金请主人点）。"""
-import argparse, json, pathlib
+import argparse, json, pathlib, sys
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "hawk-base")); import 底子
 
 
 def main(argv=None):
     a = argparse.ArgumentParser(); a.add_argument("--佣金", type=float); a.add_argument("--回执", required=True)
-    a.add_argument("--自动推广", default=""); a.add_argument("--默认佣金", type=float)
+    a.add_argument("--自动推广", default=""); a.add_argument("--默认佣金", type=float); a.add_argument("--店铺")
     a = a.parse_args(argv)
     hz = json.loads(pathlib.Path(a.回执).read_text(encoding="utf-8"))
     sx = float(hz["佣金上限"]); cuo = []
+    try:
+        feng = float(底子.canshu(a.店铺)[0].get("佣金封顶_主人定") or 0)
+    except SystemExit:
+        feng = 0.0
+    if feng and feng < sx:   # 主人定的封顶为准，算盘只能往下压（杨先生 10-31：正常 20、打得好 22，22 就是顶）
+        sx = feng
     yong = a.佣金 if a.佣金 is not None else a.默认佣金
     if yong is not None and not (0.01 <= yong <= 0.5):
         cuo.append(f"佣金 {yong:.0%} 不在官方普通计划 1%～50% 里")
