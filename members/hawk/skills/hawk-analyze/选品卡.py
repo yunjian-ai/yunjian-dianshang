@@ -1,5 +1,6 @@
 """货郎 · 选品卡：五看写好的 JSON（＋算盘回执）→ 查规矩 → 选品卡（Markdown 给人看，存店铺/选品卡/）
 用法：python3 选品卡.py <选品卡.json> [--回执 <算盘回执.json>] [--店铺 <店铺文件夹>] [--演练]
+不给 --回执：按款号读算盘写的 店铺/<店>/算盘/款回执/<款号>.json（联调 10-31）；「预估到手利润」就是回执里的「每单期望利润_算退货」（已摊退货）。
 规矩：利润只照算盘回执写（没装算盘就写「没装算盘」＋料单，不心算）；结论以「建议」开头、拍板留给主人；
 没过爆品线的不能写「建议做」（主人仍可拍板做）；自己设计的款写「建议做」要带参照款；五看每栏都要写出处（平台·页面·店铺·时间，杨先生 10-31）；输出是表格；格式照 选品卡.schema.json（有 jsonschema 就用它查，没有就查必填栏）。不过就退出码 1。"""
 import argparse, json, pathlib, sys
@@ -21,7 +22,7 @@ def cha(k, hz=None):
             cuo.append("结论要以「建议」开头（拍板留给主人）")
     lr = k.get("利润", {})
     if hz:
-        for n, m in [("保本价", "保本价"), ("佣金上限", "佣金上限")]:
+        for n, m in [("保本价", "保本价"), ("佣金上限", "佣金上限")] + ([("预估到手利润", "每单期望利润_算退货")] if "每单期望利润_算退货" in hz else []):
             if lr.get(n) != hz.get(m):
                 cuo.append(f"利润「{n}」{lr.get(n)} 和算盘回执 {hz.get(m)} 对不上（只照回执写）")
         if lr.get("出处") != "算盘回执":
@@ -44,7 +45,7 @@ def cha(k, hz=None):
 
 def md(k):
     lr = k["利润"]; w = k["五看"]
-    l = (f"保本价 {lr.get('保本价')} 元｜预估到手 {lr.get('预估到手利润')} 元｜佣金上限 {lr.get('佣金上限', 0):.0%}"
+    l = (f"保本价 {lr.get('保本价')} 元｜每单期望利润（已摊退货）{lr.get('预估到手利润')} 元｜佣金上限 {lr.get('佣金上限', 0):.0%}"
          if lr["出处"] == "算盘回执" else f"没装算盘，利润没算；算账要的料：{lr.get('料单')}")
     hang = "\n".join(f"| {n} | {w[n]['看到的']} | {w[n]['出处']} |" for n in ["热度", "爆在哪", "货源", "周期", "竞品价"])
     can = f"\n| 参照款 | {k['参照款']} | — |" if k.get("参照款") else ""
@@ -64,7 +65,16 @@ def main(argv=None):
     a = argparse.ArgumentParser(); a.add_argument("卡"); a.add_argument("--回执"); a.add_argument("--店铺"); a.add_argument("--演练", action="store_true")
     a = a.parse_args(argv)
     k = json.loads(pathlib.Path(a.卡).read_text(encoding="utf-8"))
-    hz = json.loads(pathlib.Path(a.回执).read_text(encoding="utf-8")) if a.回执 else None
+    hzp = pathlib.Path(a.回执) if a.回执 else None
+    if hzp is None:   # 没给就按款号找算盘写的款回执
+        try:
+            q = 底子.dianpu(a.店铺) / "算盘" / "款回执" / (str(k.get("款号", "")).replace("/", "_") + ".json")
+            hzp = q if q.exists() else None
+        except SystemExit:
+            pass
+    hz = json.loads(hzp.read_text(encoding="utf-8")) if hzp else None
+    if hz and not a.回执:
+        print(f"用了算盘的款回执：{hzp}（{hz.get('算的日期', '')}）")
     cuo = cha(k, hz)
     if cuo:
         print("选品卡不过：\n" + "\n".join("- " + c for c in cuo)); raise SystemExit(1)

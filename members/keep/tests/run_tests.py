@@ -306,8 +306,15 @@ with tempfile.TemporaryDirectory() as t:
     r = run("keep-report/出报.py", "--时段", "全天", "--店铺", "抖店-A", env=env)
     ok("预估净赚" in r.stdout and "小熊·卫衣" in r.stdout and "员工今天" in r.stdout and "预估利润" in r.stdout, "出报：全天报有预估利润（附算式）、销售排行用短名、员工今天")
     ok("商品 83↓1" in r.stdout or "商品 83" in r.stdout, "出报：店铺分带分项")
+    sj = str(汇总.kuaizhao(A, DAY, "全天", xie=False).get("记录时间") or "")[-5:]
+    ok(("只读到 " + sj in r.stdout) == (sj < "20:00"), f"出报：全天报后台只读到白天（{sj}）就在结论里写明全天数只到那时（联调 Bot 自报 10-31）")
+    yg = 汇总.kuaizhao(A, DAY, "全天", xie=False)["要管"]
+    ok(r.stdout.count("\n- ") >= len(yg), f"出报：要您管的一条不漏（{len(yg)} 条，联调 Bot 自报 10-31：以前只取前 8）")
     r = run("keep-report/出报.py", "--时段", "现在", "--演练", env=env)
-    ok("预估利润没算" in r.stdout and "缺成本规矩" in r.stdout, "出报：B 店没成本规矩，表里「—」之外写明为什么没算（Bot 实测 S2）")
+    ok("预估利润没算" in r.stdout and "缺成本规矩" in r.stdout and "预估利润没算：预估利润没算" not in r.stdout, "出报：B 店没成本规矩，表里「—」之外写明为什么没算（Bot 实测 S2）")
+    (B / "经营决策库" / "D-ZC-002-快递单价.md").write_text("---\n编号: D-ZC-002\n标题: 快递单价\n状态: 生效\n参数:\n  快递单价: 3.0\n---\n", encoding="utf-8")
+    ok(汇总.yunfei(B, {})[0] == 3.0, "运费：算盘写的「快递单价」卡掌柜也认（联调 10-31）")
+    (B / "经营决策库" / "D-ZC-002-快递单价.md").unlink()
     ka = A / "经营决策库" / "D-KP-009-退款率不天天报.md"
     ka.write_text("---\n编号: D-KP-009\n标题: 退款率不天天报\n状态: 生效\n参数:\n  报退款率: 0\n---\n", encoding="utf-8")
     r = run("keep-report/出报.py", "--时段", "全天", "--店铺", "抖店-A", "--演练", env=env)

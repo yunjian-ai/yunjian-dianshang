@@ -2,7 +2,24 @@
   "github_owner": "yunjian-ai",
   "repo": "yunjian-dianshang",
   "feedback_url": "https://www.feishu.cn/share/base/form/shrcnFyVGCVJkpcH7lfjOD8Ec6b",
-  "borrow": [],
+  "borrow": [
+    {
+      "copy": "members/hawk/skills/hawk-base/借用/协同协议.md",
+      "source": "shared/协同协议.md"
+    },
+    {
+      "copy": "members/hawk/skills/hawk-base/借用/danzi.py",
+      "source": "tools/danzi.py"
+    },
+    {
+      "copy": "members/hawk/skills/hawk-base/借用/交接单.schema.json",
+      "source": "shared/交接单.schema.json"
+    },
+    {
+      "copy": "members/hawk/skills/hawk-base/借用/回执.schema.json",
+      "source": "shared/回执.schema.json"
+    }
+  ],
   "系列": "万象",
   "rename_extra": {},
   "public_files_extra": [

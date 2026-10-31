@@ -117,6 +117,11 @@ with tempfile.TemporaryDirectory() as t:
     ok(r.returncode == 1 and "22%" in r.stdout, "佣金闸：25% 超主人封顶 22% → 拦，不拿算盘的 42% 往上抬")
     r = run(yz, "--佣金", "0.20", "--回执", c("算盘回执-佣金上限.json"), "--店铺", str(jc2), env=env)
     ok(r.returncode == 1 and "18%" in r.stdout, "佣金闸：算盘真上限 18% 比封顶低 → 按低的拦（算盘只能往下压）")
+    (jc2 / "算盘/款回执").mkdir(parents=True); (jc2 / "算盘/款回执/AQ-1108.json").write_text(pathlib.Path(c("算盘回执-佣金上限.json")).read_text(encoding="utf-8"), encoding="utf-8")
+    r = run(yz, "--佣金", "0.20", "--款号", "AQ-1108", "--店铺", str(jc2), env=env)
+    ok(r.returncode == 1 and "18%" in r.stdout, "佣金闸：--款号 读算盘款回执，上限 18% 比封顶低 → 拦（联调 10-31）")
+    r = run(yz, "--佣金", "0.20", "--款号", "AQ-0000", "--店铺", str(jc2), env=env)
+    ok(r.returncode == 0 and "还没给 AQ-0000" in r.stdout and "22%" in r.stdout, "佣金闸：算盘没出这款回执 → 说一句，只看主人封顶 22%")
     r = run(yz, "--佣金", "0.16", env=env)
     ok(r.returncode == 1 and "不自己定" in r.stdout, "佣金闸：没装算盘也没给上限 → 先问主人")
     hd = t / "回读.json"

@@ -2,7 +2,7 @@
 用法：python3 核表.py <导出的文件...> [--店铺 <店铺文件夹>]
 - 认出是结算账单、资金账单、订单表还是待结算订单；跳过公式说明行；去掉长数字前的引号和制表符
 - 订单表只留 25 列，带收件人、手机、地址等个人信息的列一律删掉（原文件不动，提醒主人自己删）
-- 查：主体名称是否只有一个、时间段从哪天到哪天
+- 查：主体名称是否只有一个、和这家店记下的主体是不是同一家（第一次核表记进 底座数据/商户主体.txt，以后对不上不收、请主人看）、时间段从哪天到哪天
 输出：店铺/账单/<表名>-<起>至<止>.csv，并打印一行「核表 OK／有问题」"""
 import argparse, pathlib, sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); import 底账
@@ -33,6 +33,13 @@ def main(argv=None):
         zhuti = sorted({r.get("商户主体名称", "") for r in shu} - {""})
         if len(zhuti) > 1:
             print(f"有问题 {ming} 里有 {len(zhuti)} 个主体：{'、'.join(zhuti)}——是不是混了别的店？"); bad += 1
+        zp = dp / "底座数据" / "商户主体.txt"   # 这家店是谁：第一次核表记下，以后别家的账单不收进来（联调 Bot 自报 10-31）
+        jiu = zp.read_text(encoding="utf-8").strip() if zp.exists() else ""
+        if len(zhuti) == 1 and jiu and zhuti[0] != jiu:
+            print(f"有问题 {ming} 的主体是「{zhuti[0]}」，这家店（{dp.name}）记的是「{jiu}」——是不是传错店了？没收进来，请主人看（真换了主体就改 {zp}）"); bad += 1; continue
+        if len(zhuti) == 1 and not jiu:
+            zp.parent.mkdir(parents=True, exist_ok=True); zp.write_text(zhuti[0] + "\n", encoding="utf-8")
+            print(f"提醒 第一次核表，记下这家店（{dp.name}）的主体：{zhuti[0]}；以后别的主体的账单不收进来")
         if not shu:
             print(f"有问题 {ming} 没有数据行：{f}"); bad += 1; continue
         qi, zhi = ri[0] if ri else "无日期", ri[-1] if ri else "无日期"

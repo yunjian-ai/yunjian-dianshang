@@ -27,6 +27,10 @@ with tempfile.TemporaryDirectory() as t:
     r = run(SK / "abacus-fetch/核表.py", str(cl / "结算账单-1101至1107.csv"), str(cl / "资金账单-1101至1107.csv"), str(cl / "订单-近期.csv"), "--店铺", str(dp), env=env)
     ok("核表 OK" in r.stdout and r.stdout.count("核表 ") >= 4, "核表：三张表都认出来、洗干净")
     ok("像写给 AI 的话" in r.stdout and "S02" in r.stdout, "核表：资金账单备注里夹带的话认出来、不照做")
+    ok((dp / "底座数据/商户主体.txt").exists(), "核表：第一次记下这家店的商户主体")
+    bie = dp.parent / "别的店"; (bie / "底座数据").mkdir(parents=True); (bie / "底座数据/商户主体.txt").write_text("别家服饰有限公司\n", encoding="utf-8")
+    r = run(SK / "abacus-fetch/核表.py", str(cl / "结算账单-1101至1107.csv"), "--店铺", str(bie), env=env)
+    ok(r.returncode != 0 and "传错店" in r.stdout and not (bie / "账单").exists(), "核表：账单主体和店记的对不上不收进来（联调 Bot 自报 10-31）")
     jsb = next((dp / "账单").glob("结算账单-*.csv")).read_text(encoding="utf-8-sig")
     ok("收入+支出" not in jsb, "核表：结算账单第 2 行公式说明没进数据")
 
@@ -68,6 +72,33 @@ with tempfile.TemporaryDirectory() as t:
     ok("保本退货率" in r.stdout and "佣金最多给到" in r.stdout, "单款诊断出保本退货率和佣金上限")
     r = run(SK / "abacus-diagnose/诊断.py", "马甲", "--店铺", str(dp), env=env)
     ok(r.returncode != 0 and "不能诊断" in (r.stdout + r.stderr), "缺成本的款不诊断、不估")
+    gz = dp / "经营决策库" / "D-ZC-099-成本规矩-测.md"; gz.parent.mkdir(parents=True, exist_ok=True)
+    gz.write_text("---\n编号: D-ZC-099\n标题: 成本规矩\n状态: 生效\n参数:\n  成本_占定价: 0.5\n---\n", encoding="utf-8")
+    r = run(SK / "abacus-diagnose/诊断.py", "马甲", "--店铺", str(dp), env=env)
+    mj = json.loads(next((dp / "算盘/款回执").glob("8000000000000000003.json")).read_text(encoding="utf-8")) if r.returncode == 0 else {}
+    ok("店铺规矩估" in mj.get("成本来源", "") and abs(mj.get("成本", 0) - mj.get("售价", 0) * 0.5) < 0.01, "成本表没有、主人定过成本规矩：照规矩估、写明来源（联调 10-31）")
+    gz.unlink()
+    hz = json.loads((dp / "算盘/款回执/8000000000000000001.json").read_text(encoding="utf-8"))
+    ok(hz["来自"] == "算盘" and hz["佣金上限"] is not None and hz["保本价"] and hz["成本来源"] == "成本表" and "卖一件不退挣" in hz and "每单期望利润_算退货" in hz,
+       "单款诊断写款回执（保本价、佣金上限、成本来源；不算退货和算退货的利润分两栏，联调 10-31）")
+    ok(not (dp / "算盘/款回执/开衫.json").exists() and hz["款号"] == "8000000000000000001" and hz["每单期望利润_自销"] > hz["每单期望利润_算退货"]
+       and hz["可给佣金_取低"] == min(hz["佣金上限"], hz["佣金封顶_主人定"] or 1.0),
+       "卖过的款按商品ID存款回执（不按主人说的几个字）；自销单利润另列；可给佣金取上限和主人封顶低的（联调 Bot 自报 10-31）")
+    r = run(SK / "abacus-diagnose/诊断.py", "AQ-1108", "--店铺", str(dp), "--售价", "79", "--成本", "32", "--品名", "新开衫", env=env)
+    xh = json.loads((dp / "算盘/款回执/AQ-1108.json").read_text(encoding="utf-8")) if (dp / "算盘/款回执/AQ-1108.json").exists() else {}
+    t_, y_, kd_, ry_ = xh.get("退货率", 0), xh.get("佣金率_按此算", 0), xh.get("快递", 0), xh.get("每单退货运费", 0)
+    bb_ = (32 + (kd_ + t_ * ry_) / (1 - t_)) / (1 - xh.get("平台服务费率", 0) - y_) if xh else 0
+    ok(r.returncode == 0 and "新款试算" in r.stdout and xh.get("成本来源") == "货郎交接单" and "全店" in xh.get("退货率来源", "") and y_ == 0.2 and abs(xh["保本价"] - round(bb_, 2)) < 0.01,
+       "新款（没卖过）给售价成本就试算：退货率借全店、佣金按 20%、保本价算对、写款回执")
+    r = run(SK / "abacus-diagnose/诊断.py", "AQ-1108", "--店铺", str(dp), "--售价", "79", "--成本", "32", "--品名", "新开衫", "--佣金", "0.22", env=env)
+    x2 = json.loads((dp / "算盘/款回执/AQ-1108.json").read_text(encoding="utf-8"))
+    ok(x2["佣金率_按此算"] == 0.2 and x2["每单期望利润_算退货"] == xh.get("每单期望利润_算退货") and "22%" in x2.get("按佣金试算", {}),
+       "款回执：已有基准时按别的佣金试算只记进「按佣金试算」，基准不动（联调 Bot 自报 10-31）")
+    r = run(SK / "abacus-diagnose/诊断.py", "AQ-2001", "--店铺", str(dp), "--售价", "79", "--成本", "70", "--品名", "贵衬衫", "--佣金", "0.22", env=env)
+    hzj = json.loads(sorted((dp / "回执").glob("*/abacus.json"))[-1].read_text(encoding="utf-8"))
+    ok(any("AQ-2001" in x and "亏" in x for x in hzj.get("等主人定", [])), "算出亏钱的款进算盘回执「等主人定」，掌柜报里看得到（联调 Bot 自报 10-31）")
+    r = run(SK / "abacus-diagnose/诊断.py", "AQ-9999", "--店铺", str(dp), env=env)
+    ok(r.returncode != 0 and "--售价 --成本" in (r.stdout + r.stderr), "没卖过又没给售价成本：不估，说清要什么")
 
     # 反向用例：埋错，对账必须拦
     jp = next((dp / "账单").glob("结算账单-*.csv"))

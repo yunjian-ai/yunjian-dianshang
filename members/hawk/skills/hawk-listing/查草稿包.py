@@ -41,7 +41,17 @@ def cha(c, cs):
         cuo += [f"格式：缺「{n}」" for n in SC["required"] if n not in c]
     cuo += 查标题.cha(c.get("标题", ""), c.get("属性", {}).get("面料成分"), cs)
     cuo += cha_tu(c.get("主图", []), cs)
+    for k, v in (c.get("属性") or {}).items():   # 空字符串、空格也算没填（联调 Bot 自报 10-31）
+        if k in SC["properties"]["属性"]["required"] and not str(v or "").strip():
+            cuo.append(f"属性「{k}」是空的")
+    ming = {g.get("名称") for g in c.get("规格", [])}
+    if "颜色" not in ming:
+        cuo.append("规格缺「颜色」（R-SP-004）")
+    if not ming & {"尺寸", "尺码"}:
+        cuo.append("规格缺「尺码」（R-SP-004）")
     for g in c.get("规格", []):
+        if not [v for v in g.get("值", []) if str(v).strip()]:
+            cuo.append(f"规格「{g.get('名称')}」没有值（R-SP-004）"); continue
         if g.get("名称") not in ("颜色", "尺寸", "尺码"):
             cuo.append(f"规格名「{g.get('名称')}」不规范，只用颜色、尺寸（R-SP-004）")
         if g.get("名称") == "颜色":
@@ -54,6 +64,8 @@ def cha(c, cs):
     for x in XQ:
         if x not in c.get("详情", []):
             cuo.append(f"详情缺「{x}」（R-SP-003）")
+    if "尺码表" not in c.get("详情", []):   # 店铺链接标准第四节：官方 3 样再加尺码表
+        cuo.append("详情缺「尺码表」（店铺链接标准）")
     for x in XX:
         if not c.get("商品信息", {}).get(x):
             cuo.append(f"商品信息缺「{x}」（R-SP-003）" + ("；照吊牌填，成人贴身衣物一般是 B 类" if x == "安全类别" else ""))

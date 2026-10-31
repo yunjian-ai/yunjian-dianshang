@@ -40,6 +40,10 @@ def chu_bao(snaps, shiduan, kuan=False):
     jl += f"；{yao} 件事要您看。" if yao else "；没有要您管的事。"
     if len(ok) < len(snaps):
         jl += f"（{len(snaps) - len(ok)} 家没取到）"
+    if shiduan == "全天":   # 晚上没读到后台：全天报的数其实只到白天某个时刻，要说（联调 Bot 自报 10-31）
+        zao = [f"{jian(s['店铺'])} 只读到 {str(s['记录时间'])[-5:]}" for s in ok if str(s.get("记录时间") or "")[-5:] < "20:00"]
+        if zao:
+            jl += f"（后台{'、'.join(zao)}，全天数只到那时）"
     duan = []
     # 多店总表
     if len(snaps) > 1 or shiduan == "全天":
@@ -81,7 +85,7 @@ def chu_bao(snaps, shiduan, kuan=False):
             if shiduan == "全天" and s["预估利润"] is not None:
                 t.append(f"预估利润 {底子.yuan(s['预估利润'])} 元 {ref('预估利润：' + s['利润说明'])}")
             elif shiduan != "半天" and s["预估利润"] is None and s["利润说明"]:   # 表里只有「—」，写明为什么空（Bot 实测 S2）
-                t.append(f"预估利润没算：{s['利润说明']}")
+                t.append(s["利润说明"])
         if s["商品榜"] and shiduan != "半天":
             r = ref(f"排行：{s['出处'].get('商品榜', '后台')}·{s['店铺']}·{s['记录时间']}")
             t.append(f"销售排行 {r}\n" + 底子.biao(["款", "单", "成交", "退款"],
@@ -93,7 +97,8 @@ def chu_bao(snaps, shiduan, kuan=False):
                           for k, v in ty["分项"].items() if k in ("商品", "物流", "服务"))
             t.append(f"店铺分 {fen(s)}（{fx}）{r}" + (f"；{ty['保障']}" if ty.get("保障") else "") + ("" if ty.get("今日已更新") else "；今天的分还没出（约 22 点更新）"))
         if s["要管"]:
-            t.append("**要您管的**\n" + "\n".join(f"- {y['事']} {ref(s['店铺'] + '·' + y['出处'])}" for y in s["要管"][:8]))
+            ji = {"即时": 0, "今天": 1, "本周": 2}   # 一条不漏，急的在前（联调 Bot 自报 10-31：只取前 8 条，后面的要手补）
+            t.append("**要您管的**\n" + "\n".join(f"- {y['事']} {ref(s['店铺'] + '·' + y['出处'])}" for y in sorted(s["要管"], key=lambda y: ji.get(y["级"], 3))))
         if shiduan == "全天":
             t.append("**员工今天**\n" + 底子.biao(["员工", "做了", "出了", "卡在／等您定"], s["员工"], kuan=kuan, zhu=None if kuan else 3, jian=0))
         if s["没取到"] and s["实时"]:

@@ -81,6 +81,19 @@ with tempfile.TemporaryDirectory() as t:
     kf.write_text(json.dumps(kp, ensure_ascii=False), encoding="utf-8")
     r = run(SK / "hawk-analyze/选品卡.py", str(kf), "--回执", str(cl / "算盘回执-AQ1108.json"), env=env)
     ok(r.returncode == 0 and (dp / "选品卡" / "AQ-1108.md").exists(), "选品卡：合格的卡能过、存进店铺")
+    (dp / "算盘/款回执").mkdir(parents=True, exist_ok=True); shutil.copy(cl / "算盘回执-AQ1108.json", dp / "算盘/款回执/AQ-1108.json")
+    r = run(SK / "hawk-analyze/选品卡.py", str(kf), "--店铺", str(dp), "--演练", env=env)
+    ok(r.returncode == 0 and "用了算盘的款回执" in r.stdout and "已摊退货" in r.stdout, "选品卡：不给回执按款号读算盘款回执；利润写明已摊退货（联调 10-31、Bot 自报 7）")
+    k7 = json.loads(json.dumps(kp)); k7["利润"]["预估到手利润"] = 30
+    kf.write_text(json.dumps(k7, ensure_ascii=False), encoding="utf-8")
+    r = run(SK / "hawk-analyze/选品卡.py", str(kf), "--店铺", str(dp), "--演练", env=env)
+    ok(r.returncode == 1 and "对不上" in r.stdout, "选品卡：预估到手利润和算盘回执的每单期望利润对不上 → 拦（不手抄）")
+    r = run(SK / "hawk-alliance/佣金闸.py", "--佣金", "0.18", "--款号", "AQ-1108", "--店铺", str(dp), env=env)
+    ok(r.returncode == 0 and "18%" in r.stdout, "佣金闸：--款号 读算盘款回执")
+    r = run(SK / "hawk-alliance/佣金闸.py", "--佣金", "0.18", "--款号", "AQ-0000", "--店铺", str(dp), env=env)
+    ok(r.returncode == 1 and "先请算盘" in r.stdout, "佣金闸：算盘没出这款的回执 → 停，不自己定上限")
+    kf.write_text(json.dumps(kp, ensure_ascii=False), encoding="utf-8")
+    (dp / "算盘/款回执/AQ-1108.json").unlink()
     k2 = json.loads(json.dumps(kp)); k2["利润"] = {"出处": "没装算盘", "保本价": 50}
     kf.write_text(json.dumps(k2, ensure_ascii=False), encoding="utf-8")
     r = run(SK / "hawk-analyze/选品卡.py", str(kf), "--演练", env=env)
@@ -114,9 +127,16 @@ with tempfile.TemporaryDirectory() as t:
     good["主图"][2].update({"宽": 1000, "高": 1000})
     good["规格"][0]["值"] = ["黑色", "灰色"]
     good["商品信息"]["安全类别"] = "B类"
+    good["详情"] = good["详情"] + ["尺码表"]
     gf = t / "改好.json"; gf.write_text(json.dumps(good, ensure_ascii=False), encoding="utf-8")
     r = run(SK / "hawk-listing/查草稿包.py", str(gf), env=env)
     ok(r.returncode == 0, "查草稿包：改好的能过" + ("" if r.returncode == 0 else "：" + r.stdout[-300:]))
+    kong = json.loads(json.dumps(good)); kong["属性"]["品牌"] = " "; kong["规格"] = [g for g in kong["规格"] if g["名称"] == "颜色"]; kong["规格"][0]["值"] = []
+    kong["详情"] = [x for x in kong["详情"] if x != "尺码表"]
+    kf = t / "空值.json"; kf.write_text(json.dumps(kong, ensure_ascii=False), encoding="utf-8")
+    r = run(SK / "hawk-listing/查草稿包.py", str(kf), env=env)
+    ok(r.returncode == 1 and all(n in r.stdout for n in ("「品牌」是空的", "规格缺「尺码」", "没有值", "尺码表")),
+       "查草稿包：属性填空格、颜色没值、缺尺码、详情缺尺码表都拦（联调 Bot 自报 10-31）")
 
     lm = json.loads((cl / "联盟现状.json").read_text(encoding="utf-8"))
     r = run(SK / "hawk-alliance/佣金闸.py", "--回执", str(cl / "算盘回执-AQ1108.json"), "--自动推广", lm["商品自动推广"], "--默认佣金", str(lm["默认佣金率"]), env=env)

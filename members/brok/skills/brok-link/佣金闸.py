@@ -1,5 +1,6 @@
 """经纪 · 佣金闸：要设的佣金 ↔ 算盘给这款的上限、平台下限（普通类目 5%，R-LM-008）→ 超了、低了都拦
-用法：python3 佣金闸.py --佣金 0.16 [--回执 <算盘回执.json>] [--店铺 <店铺文件夹>]
+用法：python3 佣金闸.py --佣金 0.16 [--回执 <算盘回执.json> 或 --款号 AQ-1108] [--店铺 <店铺文件夹>]
+      --款号：读算盘写的 店铺/<店>/算盘/款回执/<款号>.json（联调 10-31）；算盘没出这款的回执就只看主人封顶，并说一句
       按主人的规矩算能给多少：python3 佣金闸.py --层级 核心 [--回执 …]（读决策库「核心达人佣金」，别的层读「默认佣金」，再和封顶取低）
 封顶以主人定的为准（经营决策库「佣金封顶_主人定」；杨先生 10-31：正常 20%、打得好 22%，22% 就是顶，除非特别交代）；算盘的上限只能往下压，成本是模拟值时不用。
       没装算盘：python3 佣金闸.py --佣金 0.16 --上限 0.2（主人在经纪设置卡里给的数）
@@ -9,13 +10,19 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "brok-ba
 
 
 def main(argv=None):
-    a = argparse.ArgumentParser(); a.add_argument("--佣金", type=float); a.add_argument("--回执")
+    a = argparse.ArgumentParser(); a.add_argument("--佣金", type=float); a.add_argument("--回执"); a.add_argument("--款号")
     a.add_argument("--上限", type=float); a.add_argument("--店铺"); a.add_argument("--层级", choices=["核心", "成长", "新", "沉睡"])
     a = a.parse_args(argv)
     cs, _ = 底子.canshu(a.店铺)
     xia = float(cs["佣金下限"])
     feng = float(cs.get("佣金封顶_主人定") or 0) or (a.上限 or 0)   # 主人定的封顶为准（杨先生 10-31：正常 20、打得好 22，22 就是顶）
     sx, ly = (feng, "主人定的封顶") if feng else (None, "")
+    if not a.回执 and a.款号:
+        q = 底子.dianpu(a.店铺) / "算盘" / "款回执" / (a.款号.replace("/", "_") + ".json")
+        if q.exists():
+            a.回执 = str(q)
+        else:
+            print(f"算盘还没给 {a.款号} 出款回执，这次只看主人定的封顶；要更准请算盘先试算这款")
     if a.回执:
         hz = json.loads(pathlib.Path(a.回执).read_text(encoding="utf-8")); ss = float(hz["佣金上限"])
         if "模拟" in str(hz.get("成本来源", "")):

@@ -39,7 +39,7 @@ def du_huizhi(dp, day):
 
 
 def yunfei(dp, cs):
-    """每单运费：店里经营决策卡写了「默认仓」和「<仓>_每单」就用它，否则用参数「运费_每单」。"""
+    """每单运费：店里经营决策卡写了「默认仓」和「<仓>_每单」，或算盘写的「快递单价」，就用它；否则用参数「运费_每单」（联调 10-31：算盘的卡掌柜也认）。"""
     jc = pathlib.Path(dp) / "经营决策库"
     for p in sorted(jc.glob("D-*.md")) if jc.is_dir() else []:
         k = 底子.kaitou(p)
@@ -49,6 +49,11 @@ def yunfei(dp, cs):
             if cang and f"{cang}_每单" in can:
                 try:
                     return float(can[f"{cang}_每单"]), f"店里快递单价（{k.get('编号')}）"
+                except ValueError:
+                    pass
+            if "快递单价" in can:
+                try:
+                    return float(can["快递单价"]), f"店里快递单价（{k.get('编号')}，算盘的卡）"
                 except ValueError:
                     pass
     v = float(cs.get("运费_每单") or 0)
@@ -119,7 +124,8 @@ def yuangong(hz):
         else:
             zuo = "、".join(f"{a} {b:g}" for a, b in h["做了"].items()) or "—"
             chu = "、".join(h["出了"][:3]) + ("等" if len(h["出了"]) > 3 else "") or "—"
-            ka = "；".join((h["卡在"] + [f"等您定：{x}" for x in h["等主人定"]])[:3]) or "—"
+            ks = [f"等您定：{x}" for x in h["等主人定"]] + h["卡在"]   # 等主人定排前面，卡在多了也挤不掉（联调 Bot 自报 10-31）
+            ka = "；".join(ks[:3]) + (f"；另 {len(ks) - 3} 条" if len(ks) > 3 else "") or "—"
             rows.append([zh, zuo, chu, ka])
     return rows
 
