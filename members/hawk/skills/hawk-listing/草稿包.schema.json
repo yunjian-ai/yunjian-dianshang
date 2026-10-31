@@ -1,0 +1,16 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "货郎链接草稿包",
+ "type": "object",
+ "required": ["款号", "标题", "类目", "属性", "规格", "主图", "详情", "商品信息", "售价", "库存", "运费模板", "样品政策"],
+ "properties": {
+  "标题": {"type": "string"},
+  "属性": {"type": "object", "required": ["品牌", "面料成分", "执行标准", "适用季节", "号型"]},
+  "规格": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["名称", "值"]}},
+  "主图": {"type": "array", "items": {"type": "object", "required": ["文件", "宽", "高", "内容"]}},
+  "详情": {"type": "array", "items": {"type": "string"}},
+  "商品信息": {"type": "object"},
+  "售价": {"type": "number", "exclusiveMinimum": 0},
+  "库存": {"type": "integer", "minimum": 0}
+ }
+}

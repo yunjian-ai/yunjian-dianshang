@@ -22,3 +22,5 @@ jobs:
         run: python3 tools/test_danzi.py
       - name: 算盘脚本自测（核表、算账、对账、报告、底座）
         run: python3 members/abacus/tests/run_tests.py
+      - name: 货郎脚本自测（爆品线、选品卡、草稿包、佣金闸、货盘）
+        run: python3 members/hawk/tests/run_tests.py

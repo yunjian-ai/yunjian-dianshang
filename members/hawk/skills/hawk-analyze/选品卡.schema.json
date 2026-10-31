@@ -1,0 +1,182 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "货郎选品卡",
+ "type": "object",
+ "required": [
+  "款号",
+  "品名",
+  "来源",
+  "爆品线",
+  "五看",
+  "利润",
+  "推荐渠道",
+  "结论"
+ ],
+ "properties": {
+  "款号": {
+   "type": "string",
+   "minLength": 1
+  },
+  "品名": {
+   "type": "string",
+   "minLength": 1
+  },
+  "来源": {
+   "type": "string",
+   "description": "罗盘榜单/淘宝/拼多多/自己设计，带链接或出处和记录时间"
+  },
+  "爆品线": {
+   "enum": [
+    "过线",
+    "差一点",
+    "待核",
+    "不过",
+    "自己设计"
+   ]
+  },
+  "五看": {
+   "type": "object",
+   "required": [
+    "热度",
+    "爆在哪",
+    "货源",
+    "周期",
+    "竞品价"
+   ],
+   "properties": {
+    "热度": {
+     "type": "object",
+     "required": [
+      "看到的",
+      "出处"
+     ],
+     "properties": {
+      "看到的": {
+       "type": "string",
+       "minLength": 2
+      },
+      "出处": {
+       "type": "string",
+       "minLength": 2,
+       "description": "平台·页面或榜单·店铺·记录时间；主人说的写「主人说（日期）」"
+      }
+     }
+    },
+    "爆在哪": {
+     "type": "object",
+     "required": [
+      "看到的",
+      "出处"
+     ],
+     "properties": {
+      "看到的": {
+       "type": "string",
+       "minLength": 2
+      },
+      "出处": {
+       "type": "string",
+       "minLength": 2,
+       "description": "平台·页面或榜单·店铺·记录时间；主人说的写「主人说（日期）」"
+      }
+     }
+    },
+    "货源": {
+     "type": "object",
+     "required": [
+      "看到的",
+      "出处"
+     ],
+     "properties": {
+      "看到的": {
+       "type": "string",
+       "minLength": 2
+      },
+      "出处": {
+       "type": "string",
+       "minLength": 2,
+       "description": "平台·页面或榜单·店铺·记录时间；主人说的写「主人说（日期）」"
+      }
+     }
+    },
+    "周期": {
+     "type": "object",
+     "required": [
+      "看到的",
+      "出处"
+     ],
+     "properties": {
+      "看到的": {
+       "type": "string",
+       "minLength": 2
+      },
+      "出处": {
+       "type": "string",
+       "minLength": 2,
+       "description": "平台·页面或榜单·店铺·记录时间；主人说的写「主人说（日期）」"
+      }
+     }
+    },
+    "竞品价": {
+     "type": "object",
+     "required": [
+      "看到的",
+      "出处"
+     ],
+     "properties": {
+      "看到的": {
+       "type": "string",
+       "minLength": 2
+      },
+      "出处": {
+       "type": "string",
+       "minLength": 2,
+       "description": "平台·页面或榜单·店铺·记录时间；主人说的写「主人说（日期）」"
+      }
+     }
+    }
+   }
+  },
+  "利润": {
+   "type": "object",
+   "required": [
+    "出处"
+   ],
+   "properties": {
+    "出处": {
+     "enum": [
+      "算盘回执",
+      "没装算盘"
+     ]
+    },
+    "保本价": {
+     "type": "number"
+    },
+    "预估到手利润": {
+     "type": "number"
+    },
+    "佣金上限": {
+     "type": "number"
+    },
+    "料单": {
+     "type": "string"
+    }
+   }
+  },
+  "推荐渠道": {
+   "enum": [
+    "直播",
+    "短视频",
+    "商品卡",
+    "直播和短视频"
+   ]
+  },
+  "结论": {
+   "type": "string",
+   "pattern": "^建议"
+  },
+  "参照款": {
+   "type": "string",
+   "description": "自己设计的款照哪款做的：编号＋出处（如 罗盘直播榜 B01·暖暖女装店·2026-11-10）"
+  }
+ }
+}
