@@ -11,7 +11,7 @@ def main(argv=None):
     a = argparse.ArgumentParser(); a.add_argument("在售款"); a.add_argument("--今天"); a.add_argument("--店铺"); a.add_argument("--宽", action="store_true")
     a = a.parse_args(argv)
     cs, _ = 底子.canshu(a.店铺)
-    jin = dt.date.fromisoformat(a.今天) if a.今天 else dt.date.today()
+    jin = dt.date.fromisoformat(a.今天) if a.今天 else 底子.jintian()
     print(f"货盘（{jin}，出处：抖店·商品管理·在售款 {pathlib.Path(a.在售款).name}）\n")
     hang = []
     for r in csv.DictReader(open(a.在售款, encoding="utf-8-sig")):

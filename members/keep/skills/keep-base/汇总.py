@@ -149,7 +149,7 @@ def kuaizhao(dp, day, shiduan="现在", zhi=None, xie=True):
     elif bh is not None and bh <= -float(cs["掉分进报线"]):
         yao.append(("今天", f"店铺分掉 {abs(bh):g} 分" + (f"（{min(fx, key=fx.get)}）" if fx else ""), "体验分"))
     jz = (ss.get("成交金额") or {}).get("较昨日")
-    if jz is not None and jz <= float(cs["业绩掉线"]):
+    if shiduan == "全天" and jz is not None and jz <= float(cs["业绩掉线"]):   # 罗盘「昨日」是昨天全天，只有全天报比得了（真店连通 10-31：早上报出假的大跌）
         yao.append(("今天", f"成交比昨天 {底子.bili(jz)}", "实时"))
     for x in ((hz.get("brok") or {}).get("数") or {}).get("今日待办", []):
         if x.get("事") in ("申样快到时限", "转人工", "谈佣金", "申样对不上", "夹带指令", "签收没动静"):

@@ -16,7 +16,7 @@ def main(argv=None):
     a.add_argument("--合作单"); a.add_argument("--额度"); a.add_argument("--店铺"); a.add_argument("--记一条", action="store_true"); a.add_argument("--模板", default="")
     a = a.parse_args(argv)
     cs, mo = 底子.canshu(a.店铺)
-    now = dt.datetime.strptime(a.现在, FMT) if a.现在 else (dt.datetime.combine(底子.jintian(), dt.datetime.now().time()).replace(second=0, microsecond=0))
+    now = dt.datetime.strptime(a.现在, FMT) if a.现在 else (dt.datetime.combine(底子.jintian(), 底子.xianzai().time()).replace(second=0, microsecond=0))
     p = pathlib.Path(a.记录)
     jl = []
     if p.exists():

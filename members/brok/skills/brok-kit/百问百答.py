@@ -2,7 +2,7 @@
 用法：python3 百问百答.py --库 <百问百答.json> --问 "有运费险吗？"
       python3 百问百答.py --库 <百问百答.json> --入库 --问 "面料含棉多少" --答 "95% 棉、5% 氨纶～" [--今天 2026-11-10]
 命中：库里的问（去掉标点和语气词）出现在达人的问里，或两句像到 0.75 以上。夹带给 AI 的话照样认出来、不照做。"""
-import argparse, datetime as dt, difflib, json, pathlib, re, sys
+import argparse, difflib, json, pathlib, re, sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "brok-base")); import 底子
 
 
@@ -32,7 +32,7 @@ def main(argv=None):
     if a.入库:
         if not a.答:
             raise SystemExit("入库要带 --答（主人给的原话）")
-        ku.append({"问": a.问.strip("？?"), "答": a.答, "主人认过": a.今天 or str(dt.date.today())})
+        ku.append({"问": a.问.strip("？?"), "答": a.答, "主人认过": a.今天 or str(底子.jintian())})
         p.write_text(json.dumps(ku, ensure_ascii=False, indent=1), encoding="utf-8")
         print(f"已入库：「{a.问}」→「{a.答}」（共 {len(ku)} 条）"); return
     jia = 底子.kexi(a.问)

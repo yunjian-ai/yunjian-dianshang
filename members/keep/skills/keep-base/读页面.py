@@ -217,6 +217,7 @@ def du_shangpin(t, n=20):
 
 
 SHIJIAN = re.compile(r"^(\d{1,2}:\d{2}|昨天|前天|星期[一二三四五六日天]|\d{1,2}/\d{1,2}|\d{4}-\d{2}-\d{2})$")
+DUIHUA = re.compile(r"^(昨天|前天|星期[一二三四五六日天]|\d{1,2}/\d{1,2}|\d{4}-\d{2}-\d{2})[,，]\s*\d{1,2}:\d{2}$")   # 右边对话框里的时间「昨天, 08:20」
 
 
 def du_xiaoxi(t):
@@ -229,10 +230,13 @@ def du_xiaoxi(t):
     s0 = L.index("我接收的") + 1 if "我接收的" in L else 0
     xs, buf = [], []
     for x in L[s0:]:
+        if DUIHUA.match(x):   # 左栏完了、右边打开的对话框开始（真店 10-31：把店铺自己发的「加我｜未读｜02:58」当成达人消息推了）
+            break
         if x in ("7天前的消息", "没有更多了", "加载更多"):
             continue
         if SHIJIAN.match(x) and len(buf) >= 2:
-            xs.append({"达人": buf[-2], "最后一句": buf[-1], "时间": x})
+            if buf[-1] not in ("已读", "未读"):   # 已读回执是对话框里的，不是列表
+                xs.append({"达人": buf[-2], "最后一句": buf[-1], "时间": x})
             buf = []
         else:
             buf.append(x)
@@ -246,9 +250,8 @@ def main(argv=None):
     d = pathlib.Path(a.文件夹)
     rd = lambda n: (d / n).read_text(encoding="utf-8") if (d / n).exists() else None
     rj = lambda n: json.loads((d / n).read_text(encoding="utf-8")) if (d / n).exists() else []
-    import datetime as dt
     m = re.search(r"(\d{4}-\d{2}-\d{2})/(\d{2})(\d{2})/?$", str(d.resolve()))
-    jl = a.记录时间 or (f"{m.group(1)} {m.group(2)}:{m.group(3)}" if m else dt.datetime.now().strftime("%Y-%m-%d %H:%M"))   # 不给就用文件夹名（<日期>/<时刻>）
+    jl = a.记录时间 or (f"{m.group(1)} {m.group(2)}:{m.group(3)}" if m else 底子.xianzai().strftime("%Y-%m-%d %H:%M"))   # 不给就用文件夹名（<日期>/<时刻>）
     out = {"店铺": a.店铺, "记录时间": jl,
            "出处": {"实时": "抖店首页·经营数据·实时（R-KP-002）", "体验分": "抖店·商家体验分页（R-KP-001）", "合作消息": "精选联盟·合作消息（M-BY-003）"},
            "实时": {}, "待办": {}, "联盟": {}, "体验分": {"总分": None}, "合作消息": [], "没取到": []}

@@ -8,11 +8,17 @@ if not KU.exists() and (pathlib.Path(__file__).resolve().parents[2] / "库").exi
     KU = pathlib.Path(__file__).resolve().parents[2] / "库"   # 还没装到 ~/.yunjian/brok 时用包里自带的库（实测 10-31：没装就直接报错）
 
 
+def xianzai():
+    """现在（北京时间，不带时区）：店在中国，日期、时刻一律按北京算，电脑在哪个时区都一样（真店连通 10-31：电脑是美国太平洋时间，回执差半天）。"""
+    import datetime as _dt
+    return _dt.datetime.now(_dt.timezone(_dt.timedelta(hours=8))).replace(tzinfo=None)
+
+
 def jintian():
-    """今天：环境变量 BROK_TODAY（测试、演练用，如 2026-11-10）优先，没有用系统日期（Bot 实测自报 9）。"""
+    """今天（北京）：环境变量 BROK_TODAY（测试、演练用，如 2026-11-10）优先，没有用北京日期（Bot 实测自报 9）。"""
     import datetime as _dt
     v = os.environ.get("BROK_TODAY")
-    return _dt.date.fromisoformat(v[:10]) if v else _dt.date.today()
+    return _dt.date.fromisoformat(v[:10]) if v else xianzai().date()
 
 
 def dianpu_gen():

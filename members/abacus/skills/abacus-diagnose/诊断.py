@@ -10,7 +10,7 @@
   保本退货率 t＝(A−快递)/(A＋退货运费)；佣金上限 y：令期望利润＝0 解出（佣金基数近似取售价，严格是不含运费的实付）
   保本价 p：令期望利润＝0 解出 p＝(成本＋(快递＋t×退货运费)/(1−t))/(1−服务费率−佣金率)
 """
-import argparse, collections, csv, datetime as dt, json, os, pathlib, statistics, sys
+import argparse, collections, csv, datetime as dt, json, pathlib, statistics, sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "abacus-fetch")); import 底账, 回执
 
 f = lambda x: float(x or 0)
@@ -129,7 +129,7 @@ def xie_huizhi(dp, kuan, sp, mc, p, c, cly, fw, y, kd, t, tly, ry, beizhu, shi=F
     """款回执：货郎选品卡、佣金闸，经纪佣金闸按款号读 店铺/<店>/算盘/款回执/<款号>.json。"""
     A, li, t0, ymax = jisuan(p, c, fw, y, kd, t, ry)
     bb = baoben(c, fw, y, kd, t, ry)
-    day = str(os.environ.get("YUNJIAN_TODAY") or dt.date.today())[:10]
+    day = str(底账.jintian())
     cs, _ = 底账.can_shu(底账.KU / "平台规则库", dp / "经营决策库")
     fd = float(cs["佣金封顶_主人定"]) if cs.get("佣金封顶_主人定") not in (None, "") else None   # 主人定的封顶；回执里直接给取低的，免得下游只看上限（联调 10-31）
     hz = {"款号": kuan, "商品ID": sp, "品名": mc, "来自": "算盘", "算的日期": day,

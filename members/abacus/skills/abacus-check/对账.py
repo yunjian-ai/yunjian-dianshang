@@ -69,7 +69,11 @@ def main(argv=None):
     if (out / "汇总.json").exists():
         hz = json.loads((out / "汇总.json").read_text(encoding="utf-8"))
         n = 10 if len(list((dp / "报告").glob("*"))) <= 1 else 5
-        chou = [r["子订单号"] for r in sorted((r for r in js if r["结算单类型"] == "已结算"), key=lambda r: -f(r["结算金额"]))[:n]]
+        yi = sorted((r for r in js if r["结算单类型"] == "已结算"), key=lambda r: -f(r["结算金额"]))
+        dr = [r for r in yi if (r.get("达人ID") or "").strip(" -'\t")]; zx = [r for r in yi if r not in dr]
+        ban = min(len(dr), n // 2)   # 自销、达人各抽一半（只按结算金额排会全挑到自销单，达人佣金那条路抽不到；真店实测 10-31）
+        chou = [r["子订单号"] for r in dr[:ban] + zx[:n - ban]]
+        chou += [r["子订单号"] for r in dr[ban:] if len(chou) < n and r["子订单号"] not in chou][: n - len(chou)]
         hz["对账"] = {"结论": "OK" if not lan else "不过", "拦": lan, "提醒": ti, "抽单": chou, "抽单结果": hz.get("对账", {}).get("抽单结果", "待回")}
         (out / "汇总.json").write_text(json.dumps(hz, ensure_ascii=False, indent=1), encoding="utf-8")
     for x in lan: print("拦", x)

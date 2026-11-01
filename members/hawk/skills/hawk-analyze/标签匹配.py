@@ -22,7 +22,7 @@ def main(argv=None):
     a = a.parse_args(argv)
     dp = 底子.dianpu(a.店铺)
     cs, _ = 底子.canshu(dp)
-    jin = 爆品线.rq(a.今天) if a.今天 else 爆品线.dt.date.today()
+    jin = 爆品线.rq(a.今天) if a.今天 else 底子.jintian()
     rows = list(csv.DictReader(open(dp / "观察表.csv", encoding="utf-8-sig")))
     cc = {}
     jl = 爆品线.pan(rows, cs, jin, cc)

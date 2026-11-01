@@ -21,6 +21,8 @@ def jie(t):
     d["链接类型"] = "渠道品" if re.search(r"渠道品|专属链接|专属", t) else "全店" if "全店" in t else "普通" if re.search(r"普通|单链接|单品", t) else None
     m = re.search(r"([A-Z]{1,3}-?\d{2,6})", t)
     d["款号"] = m.group(1) if m else None
+    if not d["款号"]:   # 真店常拿商品 ID 当款号（算盘款回执按商品 ID 存，真店连通 10-31）
+        d["款号"] = next((x for x in re.findall(r"(?<!\d)(\d{15,20})(?!\d)", t.split("地址")[0]) if x != d["UID"]), None)
     if not d["款号"]:   # 真店的款多是中文名（实测 10-31「弯刀卫裤」）：找带品类字的那一段
         for seg in re.split(r"[，,；;。\s]+", t.split("地址")[0]):
             if re.search(r"(卫衣|卫裤|裤|衫|外套|开衫|裙|马甲|毛衣|羽绒服|T恤)$", seg) and not re.search(r"\d|%|UID|渠道品|普通|全店", seg, re.I):

@@ -68,6 +68,10 @@ with tempfile.TemporaryDirectory() as t:
     html = (out / "报告.html").read_text(encoding="utf-8")
     ok(r.returncode == 0 and "三层账" in html and "要注意的" in html, "报告出得来，结构对")
     ok("后台抽单" in html and "待回" in html and "找不到退款流水" in html, "报告列出对账提醒和后台抽单（待回）")
+    hzc = json.loads(next(dp.glob("报告/*/汇总.json")).read_text(encoding="utf-8"))
+    jsc = {r["子订单号"]: r for r in csv.DictReader(open(next(dp.glob("账单/结算账单*.csv")), encoding="utf-8-sig"))}
+    ok(any((jsc.get(x, {}).get("达人ID") or "").strip(" -'\t") for x in hzc["对账"]["抽单"]) and any(not (jsc.get(x, {}).get("达人ID") or "").strip(" -'\t") for x in hzc["对账"]["抽单"]),
+       "对账抽单自销、达人都有（只按结算金额排会全挑到自销单；真店实测 10-31）")
     r = run(SK / "abacus-diagnose/诊断.py", "开衫", "--店铺", str(dp), "--佣金", "0.3", env=env)
     ok("保本退货率" in r.stdout and "佣金最多给到" in r.stdout, "单款诊断出保本退货率和佣金上限")
     r = run(SK / "abacus-diagnose/诊断.py", "马甲", "--店铺", str(dp), env=env)

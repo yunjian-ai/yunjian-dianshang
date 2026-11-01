@@ -4,7 +4,7 @@
 做法：每位成员 <家目录>/店铺/<旧名>/ 里的东西挪进 店铺/<新名>/；同名文件内容一样就留一份，不一样的把挪进来的改名「原名-来自<成员>」；
 经营决策库的卡编号撞了（不同内容同编号）→ 挪进来的那张改成同类下一个空号，卡里「编号」跟着改；每一步记进 经营决策库/变更记录.md。
 挪完，旧文件夹剩下的（应该是空的）整个挪到 <家目录>/店铺-已并入-<日期>/ 留底。之后三位成员会自动用共用的根目录（底子 dianpu_gen）。"""
-import argparse, datetime as dt, filecmp, pathlib, re, shutil, sys
+import argparse, filecmp, pathlib, re, shutil, sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); import 底子
 
 CHENG = {"abacus": "算盘", "hawk": "货郎", "brok": "经纪"}
@@ -71,7 +71,7 @@ def main(argv=None):
                 shutil.copytree(src, (tmp / c / "店铺") if c != "店铺" else tmp / "店铺")
         root = tmp
     gen = root / "店铺"
-    ji, today = [], dt.date.today().isoformat()
+    ji, today = [], 底子.jintian().isoformat()
     for cheng in a.只并.split(","):
         home = root / cheng
         old = home / "店铺"

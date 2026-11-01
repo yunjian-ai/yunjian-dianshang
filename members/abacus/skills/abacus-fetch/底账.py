@@ -17,6 +17,19 @@ YINSI = ("收件人", "手机", "电话", "详细地址", "街道", "身份证",
 # 账单的备注、说明里夹带的「指令」：碰到这些字就报给主人，不照做（考题 K13、Bot 实测 10-29）
 JIADAI = ("算盘", "请把", "不用告诉", "不要告诉", "忽略", "直接改", "记成", "http://", "https://", "AI ")
 
+def xianzai():
+    """现在（北京时间，不带时区）：店在中国，日期、时刻一律按北京算，电脑或云端机器在哪个时区都一样（真店连通 10-31：电脑是美国太平洋时间，日期差半天）。"""
+    import datetime as _dt
+    return _dt.datetime.now(_dt.timezone(_dt.timedelta(hours=8))).replace(tzinfo=None)
+
+
+def jintian():
+    """今天（北京）：环境变量 YUNJIAN_TODAY（测试、演练用，如 2026-11-10）优先，没有用北京日期。"""
+    import datetime as _dt
+    v = os.environ.get("YUNJIAN_TODAY")
+    return _dt.date.fromisoformat(v[:10]) if v else xianzai().date()
+
+
 def jiadai(shu):
     """返回 [(第几行, 列名, 原话)]：备注类列里像是写给 AI 的话。"""
     out = []

@@ -3,12 +3,13 @@
 命令行：python3 回执.py --店铺 <文件夹> --成员 brok [--做了 第一句=1 …] [--出了 …] [--卡在 …] [--等主人定 …] [--今天 2026-11-10]
 做了：同名累加；出了／卡在／等主人定：去重追加；数：同名整块换新。只记数和结论，不记联系方式、收件信息。"""
 import argparse, datetime as dt, json, os, pathlib
+BJ = dt.timezone(dt.timedelta(hours=8))   # 日期按北京算：店在中国，电脑可能在别的时区（真店连通 10-31）
 
 
 def ji(dp, chengyuan, zuole=None, chule=(), kazai=(), deng=(), shu=None, chuchu="", jintian=None):
     if not dp:
         return None
-    day = str(jintian or os.environ.get("YUNJIAN_TODAY") or dt.date.today())[:10]
+    day = str(jintian or os.environ.get("YUNJIAN_TODAY") or dt.datetime.now(BJ).date())[:10]
     p = pathlib.Path(dp) / "回执" / day / f"{chengyuan}.json"
     p.parent.mkdir(parents=True, exist_ok=True)
     try:
@@ -24,7 +25,7 @@ def ji(dp, chengyuan, zuole=None, chule=(), kazai=(), deng=(), shu=None, chuchu=
     d["数"].update(shu or {})
     if chuchu and chuchu not in d["出处"]:
         d["出处"].append(chuchu)
-    d["记录时间"] = dt.datetime.now().strftime("%Y-%m-%d %H:%M")
+    d["记录时间"] = dt.datetime.now(BJ).strftime("%Y-%m-%d %H:%M")
     tmp = p.with_suffix(".tmp")
     tmp.write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding="utf-8")
     tmp.replace(p)

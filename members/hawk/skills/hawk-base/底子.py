@@ -6,6 +6,19 @@ HOME = pathlib.Path(os.environ.get("HAWK_HOME", pathlib.Path.home() / ".yunjian"
 KU = HOME / "库"
 
 
+def xianzai():
+    """现在（北京时间，不带时区）：店在中国，日期、时刻一律按北京算，电脑或云端机器在哪个时区都一样（真店连通 10-31：电脑是美国太平洋时间，日期差半天）。"""
+    import datetime as _dt
+    return _dt.datetime.now(_dt.timezone(_dt.timedelta(hours=8))).replace(tzinfo=None)
+
+
+def jintian():
+    """今天（北京）：环境变量 HAWK_TODAY（测试、演练用，如 2026-11-10）优先，没有用北京日期。"""
+    import datetime as _dt
+    v = os.environ.get("HAWK_TODAY")
+    return _dt.date.fromisoformat(v[:10]) if v else xianzai().date()
+
+
 def dianpu_gen():
     """店铺根目录：有四位共用的 ~/.yunjian/店铺/ 就用它（一家店一个文件夹、一份经营决策库、掌柜从这里汇总），没有就用自己的 <HOME>/店铺/（只装这一位时）。"""
     g = HOME.parent / "店铺"

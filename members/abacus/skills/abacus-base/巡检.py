@@ -18,7 +18,7 @@ def main(argv=None):
     a = argparse.ArgumentParser(); a.add_argument("--店铺"); a.add_argument("--正文")
     a = a.parse_args(argv)
     dp = 底账.dianpu(a.店铺)
-    jin = dt.date.today()
+    jin = 底账.jintian()
     caogao = []
     print("## 平台规则库")
     for p in sorted((底账.KU / "平台规则库").glob("R-*.md")):

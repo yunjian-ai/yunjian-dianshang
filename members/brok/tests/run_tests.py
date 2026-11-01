@@ -98,6 +98,8 @@ with tempfile.TemporaryDirectory() as t:
     ok(r.returncode == 0 and all(d[k] == a1[k] for k in ("UID", "佣金", "链接类型", "款号", "颜色", "尺码", "件数")) and d["缺"] == [] and d["发版单还缺"] == ["地址（收件人、电话、地址）"] and "设链接不等它" in r.stdout, "一句话：解析对；设链接的料齐了先设，地址出发版单前再问")
     r2 = run(yj, "UID 3566453535546040，22%，普通链接，弯刀卫裤", env=env)
     ok(r2.returncode == 0 and "款号 弯刀卫裤" in r2.stdout, "一句话：真店中文款名「弯刀卫裤」认得出（实测 10-31）")
+    r2 = run(yj, "UID 1878394968742051，22%，渠道品，3843806307165536491 黑 L 两件", env=env)
+    ok(r2.returncode == 0 and "款号 3843806307165536491" in r2.stdout and "UID 1878394968742051" in r2.stdout, "一句话：真店拿商品 ID 当款号，和 UID 分得开（真店连通 10-31）")
     r2 = run(yj, "UID 3566453535546040，22%，普通链接", env=env)
     ok(r2.returncode == 3 and "哪一款" in r2.stdout, "一句话：没说哪款 → 只问哪款")
     ok("M-BY-006" in r.stdout and "M-DD-103" in r.stdout and "继承主品佣金" in r.stdout, "一句话：渠道品两步——先设指定达人佣金，再建专属达人渠道品")

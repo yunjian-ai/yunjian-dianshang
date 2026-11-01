@@ -1,9 +1,9 @@
 """掌柜 · 即时提醒：两种不等定时报、马上推——①达人来新消息 ②店铺分一次掉 ≥3 分（杨先生 10-31；线在默认值「掉分即时线」）。
 用法：python3 提醒.py [--店铺 抖店-A …] [--今天 …] [--现在 "2026-11-10 14:10" 或 "14:10"] [--卡片 <飞书卡片.json>] [--文字 <提醒.md>] [--演练]
 读每家店最新一份后台数（给了 --现在 只看那个时刻以前的，演练补跑不用挪文件夹；Bot 实测 10-31）；新消息＝没在 掌柜/已看消息.json 里的；第一次跑只记下现有的、不推（免得一下推几十条旧消息）。
-同一件事只推一次（掌柜/已推送.json）；免打扰时段（默认 23:00～9:00）攒进 掌柜/攒着.json，过了免打扰第一次跑一起推。
+同一件事只推一次（掌柜/已推送.json；消息按「达人｜原话｜哪天」认，后台的「12:40／昨天／星期四」过一夜会变，先换成日期）；免打扰时段（默认 23:00～9:00）攒进 掌柜/攒着.json，过了免打扰第一次跑一起推。
 消息原话里的手机号、微信号打码；夹带给 AI 的话照原话标出来、不照做。没有要推的：打印「没有要提醒的」，退出码 0。"""
-import argparse, datetime as dt, json, pathlib, sys
+import argparse, datetime as dt, json, pathlib, re, sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "keep-base")); import 底子, 汇总
 
 
@@ -17,6 +17,26 @@ def rd(p, moren):
 def xie(p, d):
     p = pathlib.Path(p); p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
+def riqi(sj, ri):
+    """后台消息时间（「12:40」「昨天」「前天」「星期四」「10/22」「2025-09-30」）→ 哪天；ri 是抓页面那天。认不出原样返回。"""
+    ri, s = dt.date.fromisoformat(str(ri)[:10]), str(sj or "").strip()
+    if re.fullmatch(r"\d{1,2}:\d{2}", s):
+        return str(ri)
+    if s in ("昨天", "前天"):
+        return str(ri - dt.timedelta(1 if s == "昨天" else 2))
+    m = re.fullmatch(r"星期([一二三四五六日天])", s)
+    if m:
+        return str(ri - dt.timedelta((ri.weekday() - "一二三四五六日".index(m.group(1).replace("天", "日"))) % 7 or 7))
+    m = re.fullmatch(r"(\d{1,2})/(\d{1,2})", s)
+    if m:
+        try:
+            d = dt.date(ri.year, int(m.group(1)), int(m.group(2)))
+            return str(d if d <= ri else d.replace(year=ri.year - 1))
+        except ValueError:   # 2/29 这类
+            return s
+    return s
 
 
 def mian_darao(now, cs):
@@ -33,13 +53,17 @@ def tixing(dp, day, now, cs, yanlian=False):
     kan = rd(zm / "已看消息.json", None)
     out = []
     xs = ht.get("合作消息") or []
-    jian = lambda m: f"{m.get('达人')}｜{m.get('最后一句')}｜{m.get('时间')}"
+    ri = (ht.get("记录时间") or str(day))[:10]
+    jian = lambda m: f"{m.get('达人')}｜{m.get('最后一句')}｜{riqi(m.get('时间'), ri)}"
+    jiu = lambda m: f"{m.get('达人')}｜{m.get('最后一句')}｜{m.get('时间')}"   # 10-31 以前存的是原样时间，认一次免得换写法当天重推
     if kan is None:
         kan = [jian(m) for m in xs]   # 第一次：只记下，不推
     else:
         for m in xs:
             if jian(m) not in kan:
                 kan.append(jian(m))
+                if jiu(m) in kan:
+                    continue
                 jia = 底子.kexi(m.get("最后一句", ""))
                 out.append({"类": "达人来消息", "键": "消息｜" + jian(m),
                             "文": f"达人「{m.get('达人')}」{m.get('时间')} 来消息：「{底子.zhaiju(m.get('最后一句', ''), 80)}」"
@@ -74,8 +98,8 @@ def main(argv=None):
     a.add_argument("--卡片"); a.add_argument("--文字"); a.add_argument("--演练", action="store_true")
     a = a.parse_args(argv)
     if a.现在 and len(a.现在) <= 5:   # 只写「12:00」：日期取 --今天，没给取今天
-        a.现在 = f"{a.今天 or dt.date.today()} {a.现在}"
-    now = dt.datetime.strptime(a.现在, "%Y-%m-%d %H:%M") if a.现在 else dt.datetime.now()
+        a.现在 = f"{a.今天 or 底子.jintian()} {a.现在}"
+    now = dt.datetime.strptime(a.现在, "%Y-%m-%d %H:%M") if a.现在 else 底子.xianzai()   # 北京时间：免打扰、报头都按店的时区
     day = a.今天 or now.strftime("%Y-%m-%d")
     dps = [底子.dianpu(x) for x in a.店铺] if a.店铺 else 底子.dianpus()
     fa = []

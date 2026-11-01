@@ -4,7 +4,7 @@
 规矩（库/模板/决策卡.md）：编号 D-<类>-<三位号>，按库里已有的最大号 +1；同标题已有一张「生效」的，要用 --替代 换新版
 （同编号、版本 +1、文件名加 -v<版本>，旧卡改「已停用」不删）；参数名要和 库/默认值/选品上架-服装店.md 同名，脚本才用得上。
 Bot 实测自报 1（10-31）：之前只写「照模板」，手写的卡缺编号、状态、版本、参数。"""
-import argparse, datetime as dt, pathlib, re, sys
+import argparse, pathlib, re, sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); import 底子
 
 
@@ -17,7 +17,7 @@ def main(argv=None):
     a = a.parse_args(argv)
     dp = 底子.dianpu(a.店铺)
     jc = dp / "经营决策库"
-    jin = a.今天 or str(dt.date.today())
+    jin = a.今天 or str(底子.jintian())
     ka = {p: 底子.kaitou(p) for p in sorted(jc.glob("D-*.md")) if not p.name.startswith("._")} if jc.exists() else {}
     cs = 底子.moren_canshu()
     can = dict(x.split("=", 1) for x in a.参数 if "=" in x)

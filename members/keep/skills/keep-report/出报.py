@@ -32,7 +32,7 @@ def chu_bao(snaps, shiduan, kuan=False):
     yao = sum(1 for s in snaps for y in s["要管"])
     jishi = [f"{jian(s['店铺'])} {y['事']}" for s in snaps for y in s["要管"] if y["级"] == "即时"]
     qian = {"半天": "上午", "全天": "今天", "现在": "到现在"}[shiduan]
-    jl = f"{qian} {len(ok)} 家店成交 {底子.yuan(zong)} 元" + (f"，比昨天 {底子.bili(zong / zr - 1)}" if zr else "")
+    jl = f"{qian} {len(ok)} 家店成交 {底子.yuan(zong)} 元" + (f"，比昨天 {底子.bili(zong / zr - 1)}" if zr and shiduan == "全天" else "")   # 半天、现在拿半天比昨天全天是假警报（真店连通 10-31：报出假的大跌）
     if shiduan != "半天" and lr:
         jl += f"，预估净赚 {底子.yuan(sum(lr))} 元"
     if jishi:
@@ -48,8 +48,8 @@ def chu_bao(snaps, shiduan, kuan=False):
     # 多店总表
     if len(snaps) > 1 or shiduan == "全天":
         if shiduan == "半天":
-            tou = ["店", "上午成交", "比昨天", "店铺分", "要管"]
-            hang = [[jian(s["店铺"]), 底子.yuan(zhi(s, "成交金额")), 底子.bili((s["实时"].get("成交金额") or {}).get("较昨日")),
+            tou = ["店", "上午成交", "单", "店铺分", "要管"]   # 不比昨天：罗盘「昨日」是昨天全天，上午比不了
+            hang = [[jian(s["店铺"]), 底子.yuan(zhi(s, "成交金额")), f"{zhi(s, '成交订单数') or 0:.0f}",
                      fen(s), str(len(s["要管"]))] for s in snaps]
         else:
             tou = ["店", "成交", "预估利润", "退款", "店铺分"]
@@ -65,7 +65,7 @@ def chu_bao(snaps, shiduan, kuan=False):
             t.append("没取到：" + "；".join(s["没取到"]))
         else:
             if len(snaps) == 1 and shiduan == "半天":
-                t.append(f"成交 {底子.yuan(zhi(s, '成交金额'))} 元（比昨天 {底子.bili((s['实时'].get('成交金额') or {}).get('较昨日'))}）、"
+                t.append(f"成交 {底子.yuan(zhi(s, '成交金额'))} 元、"
                          f"{zhi(s, '成交订单数') or 0:.0f} 单；店铺分 {fen(s)}")
             if shiduan != "半天" or len(snaps) == 1:
                 tk = zhi(s, "退款金额_支付时间")

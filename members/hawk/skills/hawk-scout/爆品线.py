@@ -83,7 +83,7 @@ def main(argv=None):
     a = a.parse_args(argv)
     dp = 底子.dianpu(a.店铺)
     cs, mr = 底子.canshu(dp)
-    jin = rq(a.今天) if a.今天 else dt.date.today()
+    jin = rq(a.今天) if a.今天 else 底子.jintian()
     rows = list(csv.DictReader(open(dp / "观察表.csv", encoding="utf-8-sig")))
     cc = {}
     res = pan(rows, cs, jin, cc)
