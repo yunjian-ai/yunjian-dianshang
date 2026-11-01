@@ -298,6 +298,14 @@ with tempfile.TemporaryDirectory() as t:
     (A / "回执" / DAY / "hawk.json").write_text('{"成员": "hawk"}', encoding="utf-8")
     rows = 汇总.yuangong(汇总.du_huizhi(A, DAY))
     ok(rows[0][1].startswith("今天没跑") and "回执格式不对" in rows[1][1] and "第一句 28" in rows[2][1], "员工：算盘没回执写「今天没跑」、货郎回执缺字段写「格式不对」、经纪照回执写")
+    run("keep-base/回执.py", "--店铺", str(A), "--成员", "brok", "--演练", "--做了", "设指定达人佣金=1", "--等主人定", "练手草稿要不要提前删", "--今天", DAY, env=env)
+    h = json.loads((A / "回执" / DAY / "brok.json").read_text(encoding="utf-8"))
+    ok(h["做了"] == {"第一句": 28, "回消息": 15} and h["演练"] == {"设指定达人佣金": 1}, "回执：--演练 记进「演练」，不进「做了」（11-01 日常跑 K1：演练被当成当天的活报）")
+    run("keep-base/回执.py", "--店铺", str(A), "--成员", "brok", "--已定", "练手草稿", "--今天", DAY, env=env)
+    h = json.loads((A / "回执" / DAY / "brok.json").read_text(encoding="utf-8"))
+    ok(h["等主人定"] == ["D17 要 25% 超封顶"], "回执：--已定 把主人定了的事从「等主人定」拿掉（11-01 日常跑 K2）")
+    rows = 汇总.yuangong(汇总.du_huizhi(A, DAY))
+    ok("第一句 28" in rows[2][1] and "演练、练手：设指定达人佣金 1" in rows[2][1], "员工：演练单列一段，不和当天的活混")
 
     # 出报
     r = run("keep-report/出报.py", "--时段", "半天", "--卡片", str(t / "半天卡片.json"), env=env)
@@ -306,6 +314,7 @@ with tempfile.TemporaryDirectory() as t:
     jl0 = next((l for l in r.stdout.splitlines() if "上午 2 家店成交" in l), "")
     ok("比昨天" not in jl0, "出报：半天报结论不拿上午比昨天全天（真店连通 10-31：报出假的大跌）")
     ok("D17 要 25% 超封顶" in r.stdout and "出处：" in r.stdout, "出报：员工等主人定的事进「要您管的」，出处编号列在下面")
+    ok(not any("经纪今天" in l and "设指定达人佣金" in l for l in r.stdout.splitlines()), "出报：店况的「经纪今天」不算演练（11-01 日常跑 K1）")
     ok("点「待处理违规」进去看" in r.stdout and "由您办" in r.stdout, "出报：待处理违规写清去哪看、谁办，掌柜不处理（Bot 实测 K10）")
     kp = json.loads((t / "半天卡片.json").read_text(encoding="utf-8"))
     ok(kp["schema"] == "2.0" and kp["header"]["title"]["content"].startswith("掌柜 · 11:50 半天报"), "出报：另存飞书卡片（2.0、标题带时段）")
@@ -403,6 +412,19 @@ with tempfile.TemporaryDirectory() as t:
     r = subprocess.run([sys.executable, "-c", "import sys; sys.path.insert(0, sys.argv[1]); import 底子; print(底子.jintian())", str(SK / "keep-base")],
                        capture_output=True, text=True, env={**os.environ, "TZ": "America/Los_Angeles"})
     ok(r.stdout.strip() == str(dt.datetime.now(dt.timezone(dt.timedelta(hours=8))).date()), "时区：电脑设成美国太平洋时间，今天还是北京的日期")
+
+# 指纹.py（10-31 质检补的直接用例；四位同一份）：只认正文，导航、阅读量、空白变了指纹不变，正文改一个字就变
+import importlib.util as _iu, tempfile as _tf
+_sp = _iu.spec_from_file_location("指纹", SK / "keep-base" / "指纹.py"); _zw = _iu.module_from_spec(_sp); _sp.loader.exec_module(_zw)
+_a = "首页 导航\n更新时间：2026-10-01\n阅读量：123\n达人佣金 不低于 1%\n这篇文章是否对你有帮助\n页尾"
+_b = "别的导航\n更新时间：2026-10-01\n阅读量：98765\n达人佣金   不低于 1%\n\n这篇文章是否对你有帮助\n别的页尾"
+_c = _a.replace("1%", "2%")
+ok(_zw.zhiwen(_a) == _zw.zhiwen(_b) and _zw.zhiwen(_a) != _zw.zhiwen(_c) and len(_zw.zhiwen(_a)) == 12, "指纹：导航、阅读量、空白变了指纹不变，正文改一个字就变，12 位")
+ok(_zw.zhengwen("导航----正文----  正 文 \n") == "正文", "指纹：有「----正文----」分隔线只认线后正文")
+with _tf.NamedTemporaryFile("w", suffix=".txt", delete=False, encoding="utf-8") as _f:
+    _f.write(_a)
+_r = run("keep-base/指纹.py", _f.name)
+ok(_r.returncode == 0 and _r.stdout.split()[0] == _zw.zhiwen(_a), "指纹：命令行打印的指纹和函数算的一样")
 
 print(f"\n{'全部通过' if not bad else f'{bad} 项没过'}")
 sys.exit(1 if bad else 0)

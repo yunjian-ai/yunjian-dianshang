@@ -64,7 +64,8 @@ def main(argv=None):
     jz = sorted((v[1] / v[0], k) for k, v in th6.items() if k != "自销" and v[0] >= 300)
     top = min(kuan.items(), key=lambda i: i[1]["退货运费"]) if kuan else ("", {"退货运费": 0})
 
-    san = [f"这期到手 {yuan(t['到手'])} 元，扣掉退货运费、补偿、寄样和税，净利约 {yuan(t['净利'])} 元。"]
+    san = [f"这期到手 {yuan(t['到手'])} 元，扣掉退货运费、补偿、寄样和税，净利约 {yuan(t['净利'])} 元"
+           + (f"（数据不全，可能偏高：{'；'.join(hz['数据缺口'])}）。" if hz.get("数据缺口") else "。")]   # 缺口只在页尾注里，开头没提（11-01 实测店铺日常跑）
     if t["退货运费"] < 0 and t["到手"] > 0:
         san.append(f"退货运费被平台扣了 {yuan(-t['退货运费'])} 元，占到手的 {bai(-t['退货运费'], t['到手'])}" +
                    (f"，其中「{kname(top[0])[:14]}」一款 {yuan(-top[1]['退货运费'])} 元。" if top[1]["退货运费"] < 0 else "。"))

@@ -1,5 +1,7 @@
 """经纪 · 合作单：每张合作单走到哪、卡住多久 → 今日待办（按急排）
-用法：python3 合作单.py --合作单 <合作单.json> [--申样 <样品待审.csv>] [--消息 <合作消息.json>] [--今天 2026-11-10，或环境变量 BROK_TODAY] [--店铺 …] [--宽]
+用法：python3 合作单.py [--合作单 <合作单.json>] [--申样 <样品待审.csv>] [--买样 <买样返款.csv>] [--消息 <合作消息.json>] [--今天 2026-11-10，或环境变量 BROK_TODAY] [--店铺 …] [--宽]
+没有合作单也能跑（11-01 实测店铺日常跑 B2：后台一堆该办的，没合作单就出不了待办）：照 M-BY-003 读合作消息左栏、M-BY-005 第 7 步读买样返款，抄成 --消息、--买样。
+买样返款.csv 列：订单号、达人编号、款、下单时间、状态（已发货／待带货／…）、主推类目、周带货频次。
 卡点（杨先生 10-31 认框架图，数从默认值／经营决策库读）：申样剩余 ≤24 小时（平台 72 小时自动取消）；②第一句没回 30 天进沉睡、60 天后可再邀约一次（平台 60 天内不许重发，实测 10-31）；
 ④转人工当场提醒主人加微信；⑧签收 7 天没动静跟进、45 天交付期剩 7 天内提醒；⑨上播 3 天出单少于 5 单复盘。"""
 import argparse, csv, datetime as dt, json, pathlib, sys
@@ -19,6 +21,8 @@ def xiaoxi(xi, sy):
             continue
         if "拒绝邀约" in nr or "不太适合" in nr:
             xs.append((3, m.get("时间", "")[5:16], dr, "标拒绝", "达人拒绝／设了拒绝邀约 → 合作单标拒绝，不回、不再发"))
+        elif "查看你的联系方式" in nr or "查看了你的联系方式" in nr:   # 是达人看了店铺的联系方式，不是达人发来的（11-01 实测店铺）
+            xs.append((2, m.get("时间", "")[5:16], dr, "等达人加微信", "达人看了店铺的联系方式 → 等达人加微信；两三天没加，主人在微信或合作消息里跟一句"))
         elif "联系方式" in nr:
             xs.append((1, m.get("时间", "")[5:16], dr, "转人工", "达人发了联系方式 → 请主人加微信接手"))
         elif "佣金" in nr:
@@ -30,8 +34,28 @@ def xiaoxi(xi, sy):
     return xs
 
 
-def daiban(hds, jin, cs, sy=(), xi=()):
+def maiyang(my, jin, cs):
+    """买样返款（达人先买样、带货达标再返款）：待带货盯交付期、在路上的记一笔、像不是来带货的标出来。「提醒带货」会对外，只提醒主人。"""
     xs = []
+    for m in my:
+        dh, dr, zt = m.get("订单号", ""), m.get("达人编号", ""), m.get("状态", "")
+        m = {**m, "下单时间": m.get("下单时间", "").replace("/", "-")}   # 后台写「2026/10/31 22:04:18」
+        n = (jin - D(m["下单时间"])).days if m.get("下单时间") else None
+        if (m.get("主推类目", "").strip() in ("", "暂无主推类目")) and str(m.get("周带货频次", "")).strip() in ("0", "0.0"):
+            xs.append((2, dh, dr, "像不是来带货的", f"买样账号没有主推类目、周带货 0 → 请主人看一眼是不是来带货的（{m.get('款', '')}）"))
+        if zt == "待带货" and n is not None:
+            sheng = int(cs["交付期_天"]) - n
+            if sheng <= 7:
+                xs.append((1, dh, dr, "交付期快到", f"{m['下单时间'][:10]} 买的样，45 天交付期还剩 {sheng} 天（R-LM-001）→ 跟进；页面「提醒带货」由主人点"))
+            elif n >= int(cs["签收没动静_天"]):
+                xs.append((2, dh, dr, "待带货没动静", f"{m['下单时间'][:10]} 买的样，{n} 天还没带货，交付期到 {D(m['下单时间']) + dt.timedelta(days=int(cs['交付期_天']))} → 跟进"))
+        elif zt in ("已发货", "运输中"):
+            xs.append((3, dh, dr, "样衣在路上", f"{m.get('下单时间', '')[:10]} 买的样还在路上 → 签收后盯上播"))
+    return xs
+
+
+def daiban(hds, jin, cs, sy=(), xi=(), my=()):
+    xs = maiyang(my, jin, cs)
     for s in sy:
         h = float(s["剩余审核小时"])
         if h <= 24:
@@ -76,7 +100,7 @@ def _dp_or_none(ming):
 
 
 def main(argv=None):
-    a = argparse.ArgumentParser(); a.add_argument("--合作单", required=True); a.add_argument("--申样"); a.add_argument("--消息"); a.add_argument("--今天")
+    a = argparse.ArgumentParser(); a.add_argument("--合作单"); a.add_argument("--申样"); a.add_argument("--买样"); a.add_argument("--消息"); a.add_argument("--今天")
     a.add_argument("--店铺"); a.add_argument("--宽", action="store_true"); a.add_argument("--json", action="store_true")
     a = a.parse_args(argv)
     cs, mo = 底子.canshu(a.店铺)
@@ -86,13 +110,19 @@ def main(argv=None):
         with open(a.申样, encoding="utf-8-sig") as f:
             sy = list(csv.DictReader(f))
     xi = json.loads(pathlib.Path(a.消息).read_text(encoding="utf-8")) if a.消息 else []
-    xs = daiban(json.loads(pathlib.Path(a.合作单).read_text(encoding="utf-8")), jin, cs, sy, xi)
+    my = []
+    if a.买样:
+        with open(a.买样, encoding="utf-8-sig") as f:
+            my = list(csv.DictReader(f))
+    if not (a.合作单 or sy or xi or my):
+        print("没有合作单，也没给申样、买样、消息：照 M-BY-003 读合作消息左栏、M-BY-005 读免费样品和买样返款两个页签，抄成 --消息、--申样、--买样 再跑；不编待办"); return
+    xs = daiban(json.loads(pathlib.Path(a.合作单).read_text(encoding="utf-8")) if a.合作单 else [], jin, cs, sy, xi, my)
     zhu = {"转人工", "谈佣金", "申样对不上", "夹带指令", "复盘"}
     回执.ji(_dp_or_none(a.店铺), "brok", zuole={"排今日待办": 1},
            kazai=[f"{x[2]} {x[3]}" for x in xs if x[3] in ("签收没动静", "交付期快到", "申样快到时限")],
            deng=[f"{x[2]} {x[3]}" for x in xs if x[3] in zhu],
            shu={"今日待办": [dict(zip(["急", "单号", "达人", "事", "说明"], x)) for x in xs], "新消息": sum(1 for x in xs if x[1][:1].isdigit() and ":" in x[1])},
-           chuchu="经纪·合作单＋合作消息", jintian=jin)
+           chuchu="经纪·合作单＋合作消息＋样品管理", jintian=jin)
     if a.json:
         print(json.dumps([dict(zip(["急", "单号", "达人", "事", "说明"], x)) for x in xs], ensure_ascii=False, indent=1)); return
     print(f"{jin} 今天要办 {len(xs)} 件" + (f"，最急的是 {xs[0][1]}（{xs[0][3]}）" if xs else "") + ("；时限按默认值" if "签收没动静_天" in mo else "") + "：")

@@ -172,5 +172,56 @@ with tempfile.TemporaryDirectory() as t:
     r = run(SK / "hawk-listing/查草稿包.py", str(cl / "草稿包-AQ1108.json"), "--联盟", str(cl / "联盟现状.json"), env=env)
     ok("样品政策" in r.stdout and "≥100" in r.stdout and "| 依据 |" in r.stdout, "查草稿包：表格；样品门槛和联盟现状对不上 → 待核（Bot 自报 10）")
 
+# 指纹.py（10-31 质检补的直接用例；四位同一份）：只认正文，导航、阅读量、空白变了指纹不变，正文改一个字就变
+import importlib.util as _iu, tempfile as _tf
+_sp = _iu.spec_from_file_location("指纹", SK / "hawk-base" / "指纹.py"); _zw = _iu.module_from_spec(_sp); _sp.loader.exec_module(_zw)
+_a = "首页 导航\n更新时间：2026-10-01\n阅读量：123\n达人佣金 不低于 1%\n这篇文章是否对你有帮助\n页尾"
+_b = "别的导航\n更新时间：2026-10-01\n阅读量：98765\n达人佣金   不低于 1%\n\n这篇文章是否对你有帮助\n别的页尾"
+_c = _a.replace("1%", "2%")
+ok(_zw.zhiwen(_a) == _zw.zhiwen(_b) and _zw.zhiwen(_a) != _zw.zhiwen(_c) and len(_zw.zhiwen(_a)) == 12, "指纹：导航、阅读量、空白变了指纹不变，正文改一个字就变，12 位")
+ok(_zw.zhengwen("导航----正文----  正 文 \n") == "正文", "指纹：有「----正文----」分隔线只认线后正文")
+with _tf.NamedTemporaryFile("w", suffix=".txt", delete=False, encoding="utf-8") as _f:
+    _f.write(_a)
+_r = run(SK / "hawk-base/指纹.py", _f.name)
+ok(_r.returncode == 0 and _r.stdout.split()[0] == _zw.zhiwen(_a), "指纹：命令行打印的指纹和函数算的一样")
+# 查标题.py（10-31 质检补的直接用例）
+sys.path.insert(0, str(SK / "hawk-listing")); import 查标题 as _bt
+ok(len(_bt.cha("秒杀福利款加绒卫衣女")) == 2 and all("R-SP-001" in x for x in _bt.cha("秒杀福利款加绒卫衣女")), "查标题：直播间口令「秒杀」「福利款」两处都拦（R-SP-001）")
+ok(_bt.cha("加绒加厚潮牌大版圆领设计师款休闲宽松百搭卫衣") == [], "查标题：正常卫衣标题不报")
+ok(any("R-SP-006" in x for x in _bt.cha("羊毛混纺加厚开衫女秋冬", "棉90% 羊毛10%")) and not any("R-SP-006" in x for x in _bt.cha("羊毛混纺加厚开衫女秋冬", "羊毛50% 棉50%")), "查标题：写「羊毛」但羊毛不到 30% 拦，够 30% 不拦（R-SP-006）")
+ok(_bt.han("ab卫衣") == 3.0, "查标题：字母数字算半个字")
+_r = run(SK / "hawk-listing/查标题.py", "秒杀卫衣")
+ok(_r.returncode == 1 and "标题不过" in _r.stdout, "查标题：命令行不过退出码 1")
+
+# 读榜、爆品线（2026-11-01 实测店铺日常跑 H1、H2、H5）：数据日期去重、走势只比同一榜单、价格段外折叠
+with tempfile.TemporaryDirectory() as _t:
+    _t = pathlib.Path(_t); _home = _t / "home"; shutil.copytree(M / "库", _home / "库")
+    _dp = _home / "店铺" / "阿青卫衣"; _dp.mkdir(parents=True)
+    (_dp / "店铺标签卡.md").write_text("# 店铺标签卡\n- 价格段（在售款）：59-89\n", encoding="utf-8")
+    _env = {**os.environ, "HAWK_HOME": str(_home)}
+    _tou = "榜单,排名,商品,价格带,店铺名称,用户支付金额,点击次数,成交件数,带货直播间数,带货视频数\n"
+    _b1 = _t / "榜1.csv"; _b1.write_text(_tou + '总榜,1,Z01 测试半拉链卫衣,¥69,甲店,¥1万 - ¥2.5万,1万 - 2.5万,"1,000 - 2,500",,\n直播榜,3,Z01 测试半拉链卫衣,¥69,甲店,¥1万 - ¥2.5万,1万 - 2.5万,"2,500 - 5,000",25 - 50,\n总榜,2,Z02 测试羽绒服,¥999,乙店,¥100万 +,10万 - 25万,"2,500 - 5,000",,\n', encoding="utf-8")
+    # 老观察表少「数据日期」列：读榜时整张补列，老行不丢
+    (_dp / "观察表.csv").write_text("\ufeff记录时间,来源,榜单,时间段,商品,店铺,价格,件数下限,件数上限,精度,带货直播间数,带货视频数,原文,可疑\n2026-11-08 10:00,罗盘,总榜,近1天,Z09 老记录卫衣,丙店,¥59,750,1000,档,,,750 - 1,000,\n", encoding="utf-8")
+    _r = run(SK / "hawk-scout/读榜.py", str(_b1), "--记录时间", "2026-11-10 14:00", "--数据日期", "2026-11-09", env=_env)
+    _g = (_dp / "观察表.csv").read_text(encoding="utf-8-sig")
+    ok("读榜 OK：3 行" in _r.stdout and _g.splitlines()[0].endswith(",数据日期") and "Z09 老记录卫衣" in _g, "读榜：老观察表自动补「数据日期」列，老行不丢（11-01 日常跑 H1）")
+    _r = run(SK / "hawk-scout/读榜.py", str(_b1), "--记录时间", "2026-11-10 22:00", "--数据日期", "2026-11-09", env=_env)
+    ok("读榜 OK：0 行" in _r.stdout and "3 行同一数据日期已记过" in _r.stdout, "读榜：同一款同一榜单同一数据日期不再记（北京下午「近1天」还是前天的数，11-01 日常跑 H1）")
+    _r = run(SK / "hawk-scout/读榜.py", str(_b1), "--记录时间", "2026-11-10 22:00", env=_env)
+    ok("没写 --数据日期" in _r.stdout, "读榜：没写数据日期要提醒")
+    (_dp / "观察表.csv").write_text("\n".join(_g.splitlines()) + "\n", encoding="utf-8-sig")   # 撤掉上一步不带日期的那 3 行
+    _r = run(SK / "hawk-scout/爆品线.py", "--今天", "2026-11-10", "--json", env=_env)
+    _j = json.loads(_r.stdout)
+    ok(_j["Z01"]["结论"] == "过线" and _j["Z01"]["理由"].startswith("近 1 天 1,000 - 2,500") and _j["Z01"]["出处"]["件数原文"] == "总榜 1,000 - 2,500；直播榜 2,500 - 5,000", "爆品线：有总榜用总榜判，各榜单分开写、不串成「→」（11-01 日常跑 H2）")
+    _b2 = _t / "榜2.csv"; _b2.write_text(_tou + '总榜,1,Z01 测试半拉链卫衣,¥69,甲店,¥1万 - ¥2.5万,1万 - 2.5万,"2,500 - 5,000",,\n', encoding="utf-8")
+    run(SK / "hawk-scout/读榜.py", str(_b2), "--记录时间", "2026-11-11 14:00", "--数据日期", "2026-11-10", env=_env)
+    _j = json.loads(run(SK / "hawk-scout/爆品线.py", "--今天", "2026-11-11", "--json", env=_env).stdout)
+    ok(_j["Z01"]["出处"]["件数原文"] == "总榜 1,000 - 2,500 → 2,500 - 5,000；直播榜 2,500 - 5,000" and "2,500 - 5,000" in _j["Z01"]["理由"].split("件")[0], "爆品线：同一榜单按数据日期串走势，判线用最近一天")
+    _r = run(SK / "hawk-scout/爆品线.py", "--今天", "2026-11-11", env=_env)
+    ok("Z01" in _r.stdout and "Z02" not in _r.stdout and "另有 1 款不在店铺价格段 59-89" in _r.stdout, "爆品线：店铺价格段（上下放 30%）外的款折成一行（11-01 日常跑 H5：¥999、¥14599 混在过线里）")
+    _r = run(SK / "hawk-scout/爆品线.py", "--今天", "2026-11-11", "--全部", env=_env)
+    ok("Z02" in _r.stdout and "另有" not in _r.stdout, "爆品线：--全部 全列")
+
 print("\n" + ("全部通过" if not bad else f"{bad} 项没过"))
 sys.exit(1 if bad else 0)

@@ -1,5 +1,7 @@
 """货郎 · 爆品线：观察表.csv → 每条链接过没过线
-用法：python3 爆品线.py [--店铺 <店铺文件夹>] [--今天 2026-11-10] [--json] [--宽]
+用法：python3 爆品线.py [--店铺 <店铺文件夹>] [--今天 2026-11-10] [--json] [--宽] [--全部]
+罗盘：只看最近一个数据日期；有总榜用总榜判，直播榜、短视频榜只当「爆在哪」；走势只在同一榜单里比（2026-11-01 真店：不同榜单串成「A → B」像涨跌）。
+表里默认只列店铺价格段（店铺标签卡，上下放 30%）里的款，其余折成一行；--全部 全列。
 默认出窄表（Grok Bot、手机聊天框：出处编号列在表下、理由放表下）；--宽 出一张宽表（电脑、飞书、网页）。
 线从参数读（店铺经营决策库盖服装店默认值）：
   抖音（罗盘）：近 1 天成交件数档的下限 ≥ 抖音爆品线（默认 1000）过线；≥ 差一点线（默认 750）标「差一点」
@@ -20,6 +22,20 @@ def jian(name):
     return m.group(1) if m else name.strip()
 
 
+def ri(r):
+    """这条数是哪天的：有数据日期用数据日期，老记录用记录时间的日期。"""
+    return (r.get("数据日期") or r["记录时间"])[:10]
+
+
+def yuanwen(rs):
+    """件数原文：同一榜单按日期串走势，不同榜单用「；」分开。"""
+    zu = collections.defaultdict(dict)
+    for r in sorted(rs, key=lambda r: r["记录时间"]):
+        if r["原文"]:
+            zu[r["榜单"] or r["来源"]][ri(r)] = r["原文"]
+    return "；".join((f"{b} " if len(zu) > 1 else "") + " → ".join(v.values()) for b, v in zu.items()) or "—"
+
+
 def pan(rows, cs, jin, cc=None):
     """判每条链接；cc 传一个 dict 进来会顺便填上出处（平台、页面、店铺、价格、件数原文、记录时间）。"""
     res = {}
@@ -33,7 +49,7 @@ def pan(rows, cs, jin, cc=None):
             continue
         sj = sorted({r["记录时间"] for r in rs})
         cc[k] = {"平台": ly, "页面": "、".join(sorted({r["榜单"] for r in rs if r["榜单"]})) or "—", "店铺": rs[-1]["店铺"] or "—",
-                 "价格": rs[-1]["价格"] or "—", "件数原文": " → ".join(r["原文"] for r in sorted(rs, key=lambda r: r["记录时间"]) if r["原文"]) or "—",
+                 "价格": rs[-1]["价格"] or "—", "件数原文": yuanwen(rs),
                  "记录时间": sj[0] if len(sj) == 1 else f"{sj[0]} → {sj[-1]}"}
         if sj[-1][:10] > str(jin):   # 记录时间晚于今天（Bot 实测 10-31：材料写的 11-03、11-10），先请主人核
             res[k] = ("待核", f"记录时间 {sj[-1]} 晚于今天 {jin}，请先核一下日期是不是抄错了", ly); continue
@@ -43,7 +59,10 @@ def pan(rows, cs, jin, cc=None):
             d = [r for r in rs if r["时间段"] == "近1天" and r["件数下限"] != ""]
             if not d:
                 res[k] = ("待核", "没有近 1 天的件数", ly); continue
-            best = max(d, key=lambda r: int(r["件数下限"]))
+            zui = max(ri(r) for r in d)
+            d = [r for r in d if ri(r) == zui]   # 只看最近一个数据日期
+            zong = [r for r in d if r["榜单"] == "总榜"]
+            best = max(zong or d, key=lambda r: int(r["件数下限"]))
             lo = int(best["件数下限"])
             qudao = "；".join(f"{r['榜单']} {r['原文']}" + (f"，带货直播间 {r['带货直播间数']}" if r["带货直播间数"] else "")
                             + (f"，带货视频 {r['带货视频数']}" if r["带货视频数"] else "") for r in d)
@@ -79,7 +98,7 @@ def pan(rows, cs, jin, cc=None):
 
 
 def main(argv=None):
-    a = argparse.ArgumentParser(); a.add_argument("--店铺"); a.add_argument("--今天"); a.add_argument("--json", action="store_true"); a.add_argument("--宽", action="store_true")
+    a = argparse.ArgumentParser(); a.add_argument("--店铺"); a.add_argument("--今天"); a.add_argument("--json", action="store_true"); a.add_argument("--宽", action="store_true"); a.add_argument("--全部", action="store_true")
     a = a.parse_args(argv)
     dp = 底子.dianpu(a.店铺)
     cs, mr = 底子.canshu(dp)
@@ -91,17 +110,40 @@ def main(argv=None):
         print(json.dumps({k: {"结论": v[0], "理由": v[1], "来源": v[2], "出处": cc.get(k, {})} for k, v in res.items()}, ensure_ascii=False, indent=1)); return
     print(f"爆品线（{jin}）：抖音近 1 天 ≥{cs['抖音爆品线_近1天件数下限']} 件；跨平台隔 {cs['跨平台快照最少间隔天数']} 天涨 ≥{cs['跨平台爆品线_涨幅件数']} 件"
           + ("（按默认值）" if "抖音爆品线_近1天件数下限" in mr else "") + "\n")
-    hang = []
+    jd = None if a.全部 else jiage_duan(dp)
+    hang, zhe = [], 0
     for jl in ["过线", "差一点", "待核", "不过", "不判"]:
         for k, v in res.items():
             if v[0] == jl:
                 c = cc.get(k, {})
+                if jd and jl != "不判" and not zai_duan(c.get("价格", ""), jd):
+                    zhe += 1; continue
                 hang.append([jl, k, v[2], c.get("页面", "—"), c.get("店铺", "—"), c.get("价格", "—"), c.get("件数原文", "—"), v[1], c.get("记录时间", "—")])
     if a.宽:
         print(底子.biao(["结论", "商品", "平台", "页面／榜单", "店铺", "价格", "件数（页面原文）", "依据", "记录时间"], hang, kuan=True))
     else:
         print(底子.biao(["结论", "款", "价格", "件数", "依据", "出处"],
                        [[h[0], h[1], h[5], h[6], h[7], f"{h[2]}·{h[3]}·{h[4]}·{h[8]}"] for h in hang], chu=5, zhu=4, jian=1))
+    if zhe:
+        print(f"\n另有 {zhe} 款不在店铺价格段 {jd[0]:g}-{jd[1]:g}（上下放 30%）里，没列；要看加 --全部")
+
+
+def jiage_duan(dp):
+    """店铺标签卡里的价格段（「价格段（在售款）：36.9-89.99」），没有就不折叠。"""
+    f = pathlib.Path(dp) / "店铺标签卡.md"
+    if f.exists():
+        m = re.search(r"价格段[^：:\n]*[：:]\s*([\d.]+)\s*-\s*([\d.]+)", f.read_text(encoding="utf-8"))
+        if m:
+            return float(m.group(1)), float(m.group(2))
+    return None
+
+
+def zai_duan(jiage, jd):
+    """价格（「¥25-¥79」「¥69」）和店铺价格段上下放 30% 有重叠就算在段里；认不出价格的照列。"""
+    xs = [float(x) for x in re.findall(r"\d+(?:\.\d+)?", jiage.replace(",", ""))]
+    if not xs:
+        return True
+    return min(xs) <= jd[1] * 1.3 and max(xs) >= jd[0] * 0.7
 
 if __name__ == "__main__":
     main()

@@ -175,7 +175,7 @@ def main(argv=None):
     t = hz["三层"]
     md = [f"# {dp.name} 算账 · {a.起}～{a.止}", "", "| 项 | 元 |", "|---|---|"] + [f"| {k} | {v} |" for k, v in t.items()] + [
           "", f"缺成本 {len(que)} 款（收入 {hz['缺成本收入']} 元没进合计）；重复赔付 {len(chong)} 单；寄样 {len(jiyang)} 单；预估（未结算）{len(yugu)} 单",
-          f"用了默认值：{'、'.join(hz['用了默认值']) or '无'}"]
+          f"用了默认值：{'、'.join(hz['用了默认值']) or '无'}"] + [f"⚠️ 数据缺口：{x}" for x in hz["数据缺口"]]
     (out / "算账报告.md").write_text("\n".join(md) + "\n", encoding="utf-8")
     print("\n".join(md)); print("出到", out)
     回执.ji(dp, "abacus", zuole={"算账": 1}, kazai=[f"缺成本 {len(que)} 款"] if que else [],

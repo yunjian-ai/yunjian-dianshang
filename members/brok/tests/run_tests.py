@@ -191,5 +191,35 @@ with tempfile.TemporaryDirectory() as t:
     ok(f"商家审核时限_小时: {mo['申样审核时限_小时']}" in r1 and f"商家发货时限_小时: {mo['发货时限_小时']}" in r1 and f"达人交付期_天: {mo['交付期_天']}" in r1, "默认值的 72／48／45 和规则卡 R-LM-001 一致")
     ok("普通类目最低佣金: 5%" in (M / "库/平台规则库/R-LM-008-联盟佣金下限.md").read_text(encoding="utf-8") and mo["佣金下限"] == 0.05, "默认值的佣金下限和规则卡 R-LM-008 一致")
 
+# 指纹.py（10-31 质检补的直接用例；四位同一份）：只认正文，导航、阅读量、空白变了指纹不变，正文改一个字就变
+import importlib.util as _iu, tempfile as _tf
+_sp = _iu.spec_from_file_location("指纹", SK / "brok-base" / "指纹.py"); _zw = _iu.module_from_spec(_sp); _sp.loader.exec_module(_zw)
+_a = "首页 导航\n更新时间：2026-10-01\n阅读量：123\n达人佣金 不低于 1%\n这篇文章是否对你有帮助\n页尾"
+_b = "别的导航\n更新时间：2026-10-01\n阅读量：98765\n达人佣金   不低于 1%\n\n这篇文章是否对你有帮助\n别的页尾"
+_c = _a.replace("1%", "2%")
+ok(_zw.zhiwen(_a) == _zw.zhiwen(_b) and _zw.zhiwen(_a) != _zw.zhiwen(_c) and len(_zw.zhiwen(_a)) == 12, "指纹：导航、阅读量、空白变了指纹不变，正文改一个字就变，12 位")
+ok(_zw.zhengwen("导航----正文----  正 文 \n") == "正文", "指纹：有「----正文----」分隔线只认线后正文")
+with _tf.NamedTemporaryFile("w", suffix=".txt", delete=False, encoding="utf-8") as _f:
+    _f.write(_a)
+_r = run(SK / "brok-base/指纹.py", _f.name)
+ok(_r.returncode == 0 and _r.stdout.split()[0] == _zw.zhiwen(_a), "指纹：命令行打印的指纹和函数算的一样")
+
+# 没合作单也能出今日待办（2026-11-01 实测店铺日常跑 B2：样品全走买样返款、后台一堆该办的，没合作单就出不了待办）
+with tempfile.TemporaryDirectory() as _t:
+    _t = pathlib.Path(_t); _home = _t / "home"; shutil.copytree(M / "库", _home / "库")
+    (_home / "店铺" / "阿青卫衣").mkdir(parents=True)
+    _env = {**os.environ, "BROK_HOME": str(_home)}
+    _my = _t / "买样返款.csv"
+    _my.write_text("订单号,达人编号,款,下单时间,状态,主推类目,周带货频次\nM1,D31,AQ-1108,2026/10/15 15:20:48,待带货,服饰内衣,1.25\nM2,D32,AQ-1108,2026-09-20 10:00,待带货,服饰内衣,3\nM3,D33,AQ-1108,2026-10-31 22:04,已发货,暂无主推类目,0\nM4,D34,AQ-1108,2026-10-30 15:12,已发货,服饰内衣,5.5\n", encoding="utf-8")
+    _xi = _t / "消息.json"
+    _xi.write_text(json.dumps([{"达人编号": "D35", "内容": "需要样衣是吗", "时间": "2026-10-29 10:00"}, {"达人编号": "D36", "内容": "达人已查看你的联系方式", "时间": "2026-11-01 02:58"}], ensure_ascii=False), encoding="utf-8")
+    _r = run(SK / "brok-track/合作单.py", "--买样", str(_my), "--消息", str(_xi), "--今天", "2026-11-01", "--店铺", "阿青卫衣", "--json", env=_env)
+    _j = {(x["达人"], x["事"]) for x in json.loads(_r.stdout)} if _r.returncode == 0 else set()
+    ok(("D31", "待带货没动静") in _j and ("D32", "交付期快到") in _j, "合作单：不给合作单也能跑；买样返款待带货 17 天跟进、剩 ≤7 天标交付期快到；后台「2026/10/15」这种日期也认")
+    ok(("D33", "像不是来带货的") in _j and ("D33", "样衣在路上") in _j and ("D34", "样衣在路上") in _j and ("D34", "像不是来带货的") not in _j, "合作单：买样账号无主推类目、周带货 0 标「像不是来带货的」，在路上的记一笔")
+    ok(("D35", "回消息") in _j and ("D36", "等达人加微信") in _j and ("D36", "转人工") not in _j, "合作单：问了没回的进待办；「达人已查看你的联系方式」是等达人加微信，不是转人工（11-01 实测店铺）")
+    _r = run(SK / "brok-track/合作单.py", "--今天", "2026-11-01", "--店铺", "阿青卫衣", env=_env)
+    ok("不编待办" in _r.stdout and "M-BY-005" in _r.stdout, "合作单：什么都没给就说去哪读，不编待办")
+
 print(f"\n{'全部通过' if not bad else f'{bad} 项没过'}")
 sys.exit(1 if bad else 0)

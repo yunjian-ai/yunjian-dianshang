@@ -123,6 +123,8 @@ def yuangong(hz):
             rows.append([zh, h["_坏"], "—", "—"])
         else:
             zuo = "、".join(f"{a} {b:g}" for a, b in h["做了"].items()) or "—"
+            if h.get("演练"):   # 演练、练手单列，不和当天正经活混（11-01 日常跑 K1）
+                zuo += "；演练、练手：" + "、".join(f"{a} {b:g}" for a, b in h["演练"].items())
             chu = "、".join(h["出了"][:3]) + ("等" if len(h["出了"]) > 3 else "") or "—"
             ks = [f"等您定：{x}" for x in h["等主人定"]] + h["卡在"]   # 等主人定排前面，卡在多了也挤不掉（联调 Bot 自报 10-31）
             ka = "；".join(ks[:3]) + (f"；另 {len(ks) - 3} 条" if len(ks) > 3 else "") or "—"
