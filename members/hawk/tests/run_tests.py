@@ -185,6 +185,7 @@ with _tf.NamedTemporaryFile("w", suffix=".txt", delete=False, encoding="utf-8") 
 _r = run(SK / "hawk-base/指纹.py", _f.name)
 ok(_r.returncode == 0 and _r.stdout.split()[0] == _zw.zhiwen(_a), "指纹：命令行打印的指纹和函数算的一样")
 # 查标题.py（10-31 质检补的直接用例）
+os.environ.setdefault("HAWK_HOME", str(M))   # 在本进程里直接 import，库要从成员文件夹读，不靠这台电脑的 ~/.yunjian（11-01 公开仓库 CI 才查出来）
 sys.path.insert(0, str(SK / "hawk-listing")); import 查标题 as _bt
 ok(len(_bt.cha("秒杀福利款加绒卫衣女")) == 2 and all("R-SP-001" in x for x in _bt.cha("秒杀福利款加绒卫衣女")), "查标题：直播间口令「秒杀」「福利款」两处都拦（R-SP-001）")
 ok(_bt.cha("加绒加厚潮牌大版圆领设计师款休闲宽松百搭卫衣") == [], "查标题：正常卫衣标题不报")
