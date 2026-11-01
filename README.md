@@ -9,7 +9,7 @@
   <a href="CHANGELOG.md"><img alt="算盘" src="https://img.shields.io/badge/算盘-v0.1.6-a4762b"></a>
   <a href="CHANGELOG.md"><img alt="经纪" src="https://img.shields.io/badge/经纪-v0.1.4-8a5a2b"></a>
   <a href="CHANGELOG.md"><img alt="货郎" src="https://img.shields.io/badge/货郎-v0.1.5-3f7d4e"></a>
-  <a href="CHANGELOG.md"><img alt="掌柜" src="https://img.shields.io/badge/掌柜-v0.1.3-2f5d8a"></a>
+  <a href="CHANGELOG.md"><img alt="掌柜" src="https://img.shields.io/badge/掌柜-v0.1.4-2f5d8a"></a>
 <!-- /总表:小标签 -->
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-CC%20BY%204.0%20%2B%20MIT-555555"></a>
   <a href="https://github.com/yunjian-ai/yunjian-dianshang/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/yunjian-ai/yunjian-dianshang/actions/workflows/ci.yml/badge.svg"></a>
@@ -116,7 +116,7 @@
 curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/abacus-v0.1.6/members/abacus/dist/install.sh | bash
 curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/hawk-v0.1.5/members/hawk/dist/install.sh | bash
 curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/brok-v0.1.4/members/brok/dist/install.sh | bash
-curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/keep-v0.1.3/members/keep/dist/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/keep-v0.1.4/members/keep/dist/install.sh | bash
 ```
 
 ## 数据和边界
@@ -150,7 +150,7 @@ curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/keep-v
 | 万象 | 经纪 Broker | 达人推广：素材包、找达人、一句话设链接、申样发版、合作单跟到上播 | ✅ v0.1.4 |
 | 万象 | 货郎 Hawker | 选品上架：爆品线、选品卡、链接标准、AI 智能发品、上联盟 | ✅ v0.1.5 |
 | 起元 | 起元架构 Architecture | 一群 AI 的底座 | ✅ v0.1.1，[另一个仓库](https://github.com/yunjian-ai/yunjian) |
-| 万象 | 掌柜 Keeper | 老板面板：店铺分、业绩、排行、达人、员工看板，11:50／23:50 推送，掉分和达人消息即时提醒 | ✅ v0.1.3 |
+| 万象 | 掌柜 Keeper | 老板面板：店铺分、业绩、排行、达人、员工看板，11:50／23:50 推送，掉分和达人消息即时提醒；出报后写电商线报 | ✅ v0.1.4 |
 <!-- /总表:路线图 -->
 
 - 接下来：更多电商成员陆续推出
@@ -159,7 +159,7 @@ curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/keep-v
 
 **Cloudmere · Wanxiang · E-commerce** — AI staff for Douyin shop owners. **Abacus** joins your settlement statement, fund ledger and order export, then computes true per-order profit: return-shipping deductions, customer-service refunds, creator commissions, samples and small-taxpayer VAT included. Every number traces back to a sub-order; missing costs are listed, never guessed. Read-only in the shop backend; anything that moves money is left to you. **Hawker** picks products that are selling *now* (Douyin Compass rankings, plus Taobao/Pinduoduo snapshots taken 7 days apart), writes a sourced product card for your decision, sets your listing standard, checks drafts twice and stops before publish. Every number cites platform, page, shop and time; tables fit the screen you read them on. **Broker** runs your creator outreach: a sourced pitch kit per product, creator matching on the affiliate marketplace, first messages within platform limits, and one sentence from you ("UID, rate, link type, product") to set the targeted commission — capped at the lower of your ceiling and Abacus's limit — then sample orders and follow-up until the creator goes live. **Keeper** is the owner's dashboard: at 11:50 and 23:50 it pushes shop score, sales, refunds, top products, creator sales and what your AI staff did today across all your shops, and alerts you at once on new creator messages or a 3+ point score drop. Read-only, every number sourced.
 
-Install (any agent with a shell): `curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/abacus-v0.1.6/members/abacus/dist/install.sh | bash` · Hawker: `curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/hawk-v0.1.5/members/hawk/dist/install.sh | bash` · Broker: `curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/brok-v0.1.4/members/brok/dist/install.sh | bash` · Keeper: `curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/keep-v0.1.3/members/keep/dist/install.sh | bash`
+Install (any agent with a shell): `curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/abacus-v0.1.6/members/abacus/dist/install.sh | bash` · Hawker: `curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/hawk-v0.1.5/members/hawk/dist/install.sh | bash` · Broker: `curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/brok-v0.1.4/members/brok/dist/install.sh | bash` · Keeper: `curl -fsSL https://raw.githubusercontent.com/yunjian-ai/yunjian-dianshang/keep-v0.1.4/members/keep/dist/install.sh | bash`
 
 ## 许可
 文档和卡片 CC BY 4.0，脚本 MIT。云间Bot Cloudmere · GangGe。

@@ -1,7 +1,7 @@
 """掌柜 · 读页面：把存下来的后台页面文字（首页、商家体验分、合作消息）变成一份 后台数.json（格式见 库/模板/后台数格式.json）。
 用法：python3 读页面.py <文件夹> --店铺 <店铺文件夹名，如 抖店-A> [--后台店名 <后台右上显示的店名>] [--记录时间 "2026-11-10 11:48"] [--出 <后台数.json>]
 后台店名不给：读店铺文件夹里 掌柜/店铺档案.json 的「后台店名」；档案里还没有就把这次看到的记下来（第一次），以后对不上整份作废。
-文件夹里放：首页.txt＋首页-涨跌.json、体验分.txt＋体验分-涨跌.json、合作消息.json（可选，[{"达人","最后一句","时间"}]）。
+文件夹里放：首页.txt＋首页-涨跌.json、体验分.txt＋体验分-涨跌.json、合作消息.json（可选，[{"达人","最后一句","时间"}]）；半天、全天报另有罗盘首页、商品榜、达人榜.txt。
 涨跌.json 是页面上「较昨日／较前1日」箭头的方向，按页面顺序：[{"值": "43.94%", "方向": "down"}]（路线卡 M-KP-001、M-KP-002）。
 页面文字里只有百分比、没有正负号，方向只认涨跌.json；对不上就写 null，不猜。缺哪个文件，那块进「没取到」。"""
 import argparse, json, pathlib, re, sys
@@ -216,6 +216,25 @@ def du_shangpin(t, n=20):
     return rows
 
 
+def du_darenbang(t, n=10):
+    """罗盘「达人 → 达人概览 → TOP达人」：每位「达人｜抖音号：…｜¥直播用户支付金额｜占比｜详情」（M-KP-003）；顶上「YYYY/MM/DD - YYYY/MM/DD」是统计范围（后台约晚两天）。
+    返回 (行, 范围)；抖音号不留（线报用不上）。"""
+    L = [x.strip() for x in t.splitlines() if x.strip()]
+    fw = re.search(r"(\d{4}/\d{2}/\d{2})\s*-\s*(\d{4}/\d{2}/\d{2})", t)
+    fw = f"{fw.group(1)}～{fw.group(2)}" if fw else None
+    s0 = L.index("TOP达人") if "TOP达人" in L else 0
+    rows = []
+    for i in range(s0, len(L)):
+        if L[i].startswith("抖音号") and i >= 1 and i + 2 < len(L):
+            je = shu(L[i + 1].replace("¥", "").replace("￥", "").strip())
+            zb = PCT.match(L[i + 2])
+            if je is not None:
+                rows.append({"达人": L[i - 1], "成交金额": je, "占比": float(zb.group(1)) / 100 if zb else None})
+            if len(rows) >= n:
+                break
+    return rows, fw
+
+
 SHIJIAN = re.compile(r"^(\d{1,2}:\d{2}|昨天|前天|星期[一二三四五六日天]|\d{1,2}/\d{1,2}|\d{4}-\d{2}-\d{2})$")
 DUIHUA = re.compile(r"^(昨天|前天|星期[一二三四五六日天]|\d{1,2}/\d{1,2}|\d{4}-\d{2}-\d{2})[,，]\s*\d{1,2}:\d{2}$")   # 右边对话框里的时间「昨天, 08:20」
 
@@ -293,6 +312,10 @@ def main(argv=None):
     if sp:
         out["商品榜"] = du_shangpin(sp)
         out["出处"]["商品榜"] = "电商罗盘·商品列表·实时·全店成交TOP"
+    db = rd("达人榜.txt")
+    if db:
+        out["达人榜"], fw = du_darenbang(db)
+        out["出处"]["达人榜"] = "电商罗盘·达人·达人概览·TOP达人" + (f"（{fw}）" if fw else "")
     ty = rd("体验分.txt")
     if ty:
         out["体验分"] = du_tiyan(ty, Qushi(rj("体验分-涨跌.json")))

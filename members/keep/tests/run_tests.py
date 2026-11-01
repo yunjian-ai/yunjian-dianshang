@@ -426,5 +426,270 @@ with _tf.NamedTemporaryFile("w", suffix=".txt", delete=False, encoding="utf-8") 
 _r = run("keep-base/指纹.py", _f.name)
 ok(_r.returncode == 0 and _r.stdout.split()[0] == _zw.zhiwen(_a), "指纹：命令行打印的指纹和函数算的一样")
 
+# ===== 电商线报（keep-v0.1.4）：虚构抖店-A、微信小店-阿青，读页面（达人榜）→ 读微信 → 线报；照 shared/线报.schema.json 全查 =====
+import re
+GESHI = next((p for p in (M / "库" / "线报.schema.json", M.parents[1] / "shared" / "线报.schema.json") if p.exists()), None)
+
+
+DARENBANG = """达人
+达人概览
+2026/11/03
+-
+2026/11/09
+近1天
+近7天
+TOP达人
+TOP直播间
+TOP商品
+排名	达人	直播用户支付金额	直播用户支付金额占比	操作
+排名
+达人
+直播用户支付金额
+直播用户支付金额占比
+操作
+小熊的衣橱
+抖音号： 10000001
+¥12,000.50
+80%
+详情
+阿夏(牛仔裤穿搭👖)
+抖音号： 10000002
+¥2,000
+13.33%
+详情
+4
+小鹿穿搭
+抖音号： 10000003
+¥1,000.00
+6.67%
+详情
+"""
+
+WX_SHOUYE = """@@URL https://store.weixin.qq.com/shop/home
+首页
+待发货
+3
+物流异常
+1
+售后
+2
+经营数据
+更新于 2026/11/10 11:40
+今天
+成交金额
+¥1,234.5
+昨日
+¥900
+成交人数
+10
+昨日
+8
+成交订单数
+12
+昨日
+9
+阿青针织
+分享
+店铺体验分
+4.71
+中
+"""
+
+WX_SHANGPIN = """@@URL https://store.weixin.qq.com/shop/statistics/product
+商品数据
+统计时间 2026/11/03 至 2026/11/09
+重点关注优秀商品
+统计时间 2026/11/03 至 2026/11/09
+成交金额高
+【小熊】加绒加厚潮牌大版圆领卫衣女
+￥69.99
+￥2,099.70
+较上周期
++12.00%
+【阿青】美式弯刀裤宽松卫裤
+￥79.99
+￥799.90
+较上周期
+-5.00%
+成交件数高
+【小熊】加绒加厚潮牌大版圆领卫衣女
+￥69.99
+30
+"""
+
+WX_DAIHUO = """@@URL https://store.weixin.qq.com/shop/shopleague/coop-manage
+带货者信息
+累计销售额
+近30日销售额
+累计订单数
+近30日成交订单
+近30日成交商品
+橱窗商品数
+操作
+小熊直播间
+带货新人
+ID
+wx000001
+小熊直播间
+¥50,000.00
+¥3,000.00
+900
+40
+3
+10
+联系带货者
+加入黑名单
+详情
+没卖过的号
+带货新人
+ID
+wx000002
+没卖过的号
+¥0.00
+¥0.00
+0
+0
+0
+0
+联系带货者
+加入黑名单
+详情
+阿夏服饰
+带货新人
+ID
+wx000003
+阿夏服饰
+¥9,000.00
+¥5,000.00
+200
+60
+2
+8
+联系带货者
+加入黑名单
+详情
+"""
+
+sys.path.insert(0, str(SK / "keep-base"))
+with tempfile.TemporaryDirectory() as t:
+    t = pathlib.Path(t)
+    home = t / "keep"; shutil.copytree(M / "库", home / "库")
+    gen = t / "店铺"; A = gen / "抖店-A"; W = gen / "微信小店-阿青"
+    for dp in (A, W):
+        dp.mkdir(parents=True)
+    DAY = "2026-11-10"
+    env = {**os.environ, "KEEP_HOME": str(home), "KEEP_TODAY": DAY}
+    os.environ.update({"KEEP_HOME": str(home), "KEEP_TODAY": DAY})
+    import importlib; import 读页面, 读微信; importlib.reload(读页面)
+
+    # 读页面：达人榜
+    rows, fw = 读页面.du_darenbang(DARENBANG)
+    ok([r["达人"] for r in rows] == ["小熊的衣橱", "阿夏(牛仔裤穿搭👖)", "小鹿穿搭"] and rows[0]["成交金额"] == 12000.5 and abs(rows[0]["占比"] - 0.8) < 1e-9 and fw == "2026/11/03～2026/11/09",
+       "读页面·达人榜：三位达人、金额、占比、统计范围；第 4 名前面的序号不当达人；抖音号不留")
+    ok(all("抖音号" not in json.dumps(r, ensure_ascii=False) and "10000001" not in json.dumps(r) for r in rows), "读页面·达人榜：抖音号不进数据")
+
+    # 读微信
+    zhi, gx, dian, cuo = 读微信.du_shouye(WX_SHOUYE)
+    ok(zhi["成交金额"] == 1234.5 and zhi["成交订单数"] == 12 and zhi["体验分"] == 4.71 and gx == "2026/11/10 11:40" and dian == "阿青针织" and cuo is None,
+       "读微信·首页：成交 1,234.5、订单 12、体验分 4.71、更新时间、店名")
+    ok(读微信.du_shouye("@@URL https://store.weixin.qq.com/shop/login\n扫码登录")[3] and "没登录" in 读微信.du_shouye("@@URL https://store.weixin.qq.com/shop/login\n")[3],
+       "读微信·首页：被跳到登录页 → 报没登录，不读数")
+    sp, fw = 读微信.du_shangpin(WX_SHANGPIN)
+    ok([r["成交金额"] for r in sp] == [2099.7, 799.9] and fw == "2026/11/03 至 2026/11/09", "读微信·商品：成交金额高两款（价格不当成交）、统计范围；成交件数高那块不混进来")
+    dh = 读微信.du_daihuo(WX_DAIHUO)
+    ok([r["达人"] for r in dh] == ["阿夏服饰", "小熊直播间"] and dh[0]["近30日销售额"] == 5000, "读微信·带货者：按近 30 日销售额排，没卖过的不列，ID 不当昵称")
+    wd = W / "掌柜" / "后台" / DAY / "1150"; wd.mkdir(parents=True)
+    for n, txt in (("微信首页", WX_SHOUYE), ("微信商品", WX_SHANGPIN), ("微信带货者", WX_DAIHUO)):
+        (wd / f"{n}.txt").write_text(txt, encoding="utf-8")
+    r = run("keep-base/读微信.py", wd, "--店铺", "微信小店-阿青", "--后台店名", "阿青针织", env=env)
+    w = json.loads((wd / "微信数.json").read_text(encoding="utf-8"))
+    ok(r.returncode == 0 and w["实时"]["成交金额"] == 1234.5 and w["记录时间"] == f"{DAY} 11:50" and not w["没取到"] and "更新于 2026/11/10 11:40" in w["出处"]["实时"],
+       "读微信：命令行出 微信数.json，记录时间用文件夹名，出处带更新时间")
+    ok("待发货" not in json.dumps(w["实时"], ensure_ascii=False) and "物流" not in json.dumps(w["实时"], ensure_ascii=False), "读微信：待发货、物流、售后不读（主人 11-01：运营层面不进线报）")
+    wx2 = t / "错店"; wx2.mkdir()
+    (wx2 / "微信首页.txt").write_text(WX_SHOUYE, encoding="utf-8")
+    run("keep-base/读微信.py", wx2, "--店铺", "微信小店-阿青", "--后台店名", "别人家", env=env)
+    w2 = json.loads((wx2 / "微信数.json").read_text(encoding="utf-8"))
+    ok(any("不是这家店" in x for x in w2["没取到"]) and not w2["实时"], "读微信：首页店名对不上 → 整份作废、写进没取到")
+
+    # 抖店后台数：照读页面的输出直接造（读页面自己的用例在 run_tests.py）
+    def houtai(shike, zf, gx, xs, **kw):
+        d = A / "掌柜" / "后台" / DAY / shike; d.mkdir(parents=True, exist_ok=True)
+        ht = {"店铺": "抖店-A", "记录时间": f"{DAY} {shike[:2]}:{shike[2:]}",
+              "出处": {"实时": "电商罗盘·首页·经营概况·实时", "体验分": "抖店·商家体验分页", "合作消息": "精选联盟·合作消息",
+                     "商品榜": "电商罗盘·商品列表·实时·全店成交TOP", "达人榜": "电商罗盘·达人·达人概览·TOP达人（2026/11/03～2026/11/09）"},
+              "实时": {"成交金额": {"值": 6020.0, "较昨日": 0.204}, "成交订单数": {"值": 84.0}, "退款率_支付时间": {"值": 0.14}},
+              "待办": {"待发货": 12, "异常包裹": 2, "待处理售后": 5, "待处理违规": 1},
+              "联盟": {"近7日达人成交金额": 21000.0, "近7日合作达人数": 36.0},
+              "体验分": {"总分": zf, "更新时间": gx, "分项": {"商品": {"分": 83.0}, "物流": {"分": 96.0}, "服务": {"分": 90.0}}, "短板": "商品品质退货率"},
+              "商品榜": [{"商品": "【小熊】加绒加厚潮牌大版圆领卫衣女", "成交金额": 3100.0}, {"商品": "【阿青】美式弯刀裤宽松卫裤", "成交金额": 1560.0}],
+              "达人榜": rows, "合作消息": xs, "没取到": []}
+        ht.update(kw)
+        (d / "后台数.json").write_text(json.dumps(ht, ensure_ascii=False), encoding="utf-8")
+    XS = [{"达人": "阿夏", "最后一句": "这款有加绒版吗？能寄个样看看吗", "时间": "10:05"},
+          {"达人": "小鹿穿搭", "最后一句": "达人已查看你的联系方式", "时间": "昨天"},
+          {"达人": "霏", "最后一句": "商品不太适合我，暂时不用了", "时间": "星期三"},
+          {"达人": "简简", "最后一句": "183/9790/1772，商务联系，宝子", "时间": "11/08"},
+          {"达人": "老朋友", "最后一句": "在吗", "时间": "10/01"}]
+    (A / "掌柜").mkdir(exist_ok=True)
+    (A / "掌柜" / "体验分记录.json").write_text(json.dumps({"2026-11-08 21:58:00": {"总分": 92, "分项": {"商品": 88}}}), encoding="utf-8")
+    houtai("1150", 88.0, "2026-11-09 21:58:00", XS)
+    rz = A / "回执" / DAY; rz.mkdir(parents=True)
+    (rz / "brok.json").write_text(json.dumps({"成员": "brok", "店铺": "抖店-A", "日期": DAY, "做了": {"回消息": 5}, "出了": ["今日待办 4 件"], "卡在": [],
+                                               "等主人定": ["达人要 25% 佣金，手机 " + "138" + "1234" + "5678"], "数": {}}, ensure_ascii=False), encoding="utf-8")
+    (rz / "keep.json").write_text(json.dumps({"成员": "keep", "店铺": "抖店-A", "日期": DAY, "做了": {"出报": 1}, "出了": ["半天报"], "卡在": [], "等主人定": [], "数": {}}, ensure_ascii=False), encoding="utf-8")
+
+    out = t / "线报" / "02-02.json"
+    r = run("keep-base/线报.py", "--店铺", "抖店-A", "--微信", "微信小店-阿青", "--出", out, "--现在", f"{DAY}T11:52:00", *(["--格式", GESHI] if GESHI else []), env=env)
+    ok(r.returncode == 0 and out.exists(), "线报：命令行写出 02-02.json（" + (r.stdout.strip().splitlines() or ["没输出"])[0][:80] + "）")
+    xb = json.loads(out.read_text(encoding="utf-8"))
+    try:
+        import jsonschema
+        if GESHI:
+            es = list(jsonschema.Draft202012Validator(json.loads(GESHI.read_text(encoding="utf-8")), format_checker=jsonschema.FormatChecker()).iter_errors(xb))
+            ok(not es, f"线报：照 线报.schema.json 全查 0 处错（{len(es)} 处）")
+        else:
+            ok(True, "线报：找不到格式文件，跳过全查")
+    except ImportError:
+        ok(True, "线报：没装 jsonschema，跳过全查")
+    jg = xb["结果"]
+    ok(jg.get("dy1_chengjiao", {}).get("值") == 6020 and jg["dy1_dingdan"]["值"] == 84 and jg["dy1_tuikuanlv"]["值"] == 14.0,
+       "线报·抖店：今日成交 6,020、订单 84、退款率 14%（店名没数字用序号 dy1）")
+    ok(jg["dy1_tiyanfen"]["值"] == 88 and jg["dy1_tiyan_bianhua"]["值"] == -4 and jg["dy1_tiyan_fenxiang"]["值"] == "商品 83｜物流 96｜服务 90", "线报·抖店：体验分 88、较上次 −4、分项")
+    ok(jg["dy1_paihang"]["值"].startswith("1. 小熊·卫衣 3,100") and "2. 阿青·弯刀裤 1,560" in jg["dy1_paihang"]["值"], "线报·抖店：各款排行前 5（短名＋成交金额）")
+    ok(jg["dy1_darenbang"]["值"].startswith("1. 小熊的衣橱 12,000（80%）") and "阿夏(牛仔裤穿搭👖)" in jg["dy1_darenbang"]["值"] and "2026/11/03～2026/11/09" in jg["dy1_darenbang"]["出处"],
+       "线报·抖店：带货达人前 5，达人名不被缩成「牛仔裤」，出处带统计范围")
+    gt = jg["dy1_goutong"]["值"]
+    ok("等我们回 2（阿夏、简简）" in gt and "等达人加微信 1（小鹿穿搭）" in gt and "婉拒 1（霏）" in gt and "老朋友" not in gt, "线报·抖店：沟通状态分类，只算近 7 天（10/01 那条不算）")
+    ok(jg["dy1_daren7"]["值"] == 21000 and jg["dy1_darenshu"]["值"] == 36, "线报·抖店：近 7 日达人成交、合作达人数")
+    ok((jg.get("wx1_chengjiao") or {}).get("值") == 1234.5 and jg["wx1_tiyanfen"]["值"] == 4.71 and "2. 小熊直播间 3,000" in jg["wx1_darenbang"]["值"],
+       "线报·微信小店：成交、体验分、带货达人（近 30 日）")
+    ok(jg["wx1_goutong"]["值"] is None and "没有带货者消息列表" in jg["wx1_goutong"]["出处"], "线报·微信小店：沟通状态后台没有 → 写 null 并说明，不编")
+    ok(all(re.search(r"·\d{4}-\d{2}-\d{2}|更新|\d{4}/\d{2}/\d{2}", v["出处"]) and v["出处"].count("·") >= 2 for v in jg.values()), "线报：每个数都带出处（平台·页面·店铺·时间）")
+    quan = json.dumps(xb, ensure_ascii=False)
+    ok(not re.search(r"1[3-9]\d{9}|183/9790", quan) and "寄个样" not in quan and "商务联系" not in quan, "线报：手机号打码、不抄消息原话")
+    ok(not any(re.search(r"发票|物流|售后|待发货|违规|异常包裹", v["名字"] + k) for k, v in jg.items()) and "待处理违规" not in quan and "异常包裹" not in quan,
+       "线报：不放发票、物流、售后、待发货、违规（主人 11-01 定）")
+    jd = {x["谁"]: x for x in xb["进度"]}
+    ok(list(jd) == ["算盘", "货郎", "经纪", "掌柜"] and jd["算盘"]["做了"] == "今天没跑" and jd["经纪"]["做了"] == "回消息 5" and jd["掌柜"]["出了"] == ["半天报"],
+       "线报·进度：四位各一行，没回执写「今天没跑」")
+    ok(len(xb["等你定"]) == 1 and xb["等你定"][0]["编号"].startswith("brok-") and "1**********" in xb["等你定"][0]["标题"], "线报·等你定：经纪回执里的事搬过来、编号固定、手机号打码")
+    wt = {x["编号"]: x for x in xb["问题"]}
+    ok(wt.get("dy1-diaofen", {}).get("级别") == "P1" and wt["dy1-diaofen"]["派给"] == "掌柜", "线报·问题：体验分掉 4 分（≥3）→ P1 派给掌柜")
+    ok(wt.get("dy1-daren-wen", {}).get("级别") == "P2" and wt["dy1-daren-wen"]["派给"] == "经纪" and "阿夏" in wt["dy1-daren-wen"]["说明"], "线报·问题：达人等我们回 → P2 派给经纪")
+    ok(xb["保质期分钟"] == 780 and xb["线"] == "02-02" and xb["统筹"] == "掌柜" and xb["更新时间"] == f"{DAY}T11:52:00+08:00", "线报：线 02-02、统筹掌柜、保质期 780、更新时间带北京时区")
+    r2 = run("keep-base/线报.py", "--店铺", "抖店-A", "--出", out, "--今天", DAY, "--现在", f"{DAY}T12:00:00", "--演练", env=env)
+    ok(r2.returncode == 0 and json.loads(out.read_text(encoding="utf-8"))["更新时间"].startswith(f"{DAY}T11:52"), "线报：--演练只打印不写文件")
+
+    # 埋错
+    r3 = run("keep-base/线报.py", "--店铺", "抖店-A", "--出", t / "坏.json", "--线", "电商", "--现在", f"{DAY}T12:00:00", env=env)
+    ok(r3.returncode == 1 and not (t / "坏.json").exists() and "格式不过" in r3.stdout, "线报·埋错：线编号不合格式 → 不写，报格式不过")
+    shutil.rmtree(wd)
+    r4 = run("keep-base/线报.py", "--微信", "微信小店-阿青", "--出", t / "w.json", "--现在", f"{DAY}T12:00:00", env=env)
+    w4 = json.loads((t / "w.json").read_text(encoding="utf-8"))
+    ok(r4.returncode == 0 and "wx1-meidu" in {x["编号"] for x in w4["问题"]} and not any(k.startswith("wx1") for k in w4["结果"]), "线报·埋错：微信小店今天没读到 → 问题 P1，不编数")
+    ok(not (gen / "抖店-A" / "掌柜" / "体验分记录.json").read_text(encoding="utf-8").count("2026-11-09"), "线报：只读体验分记录，不往里写（写是出报的事）")
+
+
 print(f"\n{'全部通过' if not bad else f'{bad} 项没过'}")
 sys.exit(1 if bad else 0)
